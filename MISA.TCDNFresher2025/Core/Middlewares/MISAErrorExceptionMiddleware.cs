@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using MISA.Core.Dtos;
+using MISA.Core.Dtos.Common;
 using MISA.Core.Exceptions;
 using System;
 using System.Collections.Generic;

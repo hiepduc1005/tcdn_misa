@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MISA.Core.Dtos
+namespace MISA.Core.Dtos.Common
 {
     public class FilterItem
     {

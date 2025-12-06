@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using MISA.Core.Dtos.Common;
 using System;
 using System.Collections.Generic;
 using System.Text;

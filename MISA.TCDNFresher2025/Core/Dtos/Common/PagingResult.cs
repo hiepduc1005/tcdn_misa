@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MISA.Core.Dtos
+namespace MISA.Core.Dtos.Common
 {
     public class PagingResult<T>
     {
-        public IEnumerable<T> Data { get; set; }
+        public IEnumerable<T> DataPaging { get; set; }
 
         public int TotalRecords { get; set; }
 
@@ -24,7 +24,7 @@ namespace MISA.Core.Dtos
 
         public PagingResult(IEnumerable<T> data, int totalRecords, int pageSize, int currentPage)
         {
-            Data = data;
+            DataPaging = data;
             TotalRecords = totalRecords;
             PageSize = pageSize;
             CurrentPage = currentPage;

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MISA.Core.Dtos;
+using MISA.Core.Dtos.Common;
 using MISA.Core.Dtos.Shift;
 using MISA.Core.Interfaces.Services;
 
@@ -51,6 +51,18 @@ namespace MISA.Api.Controllers
                 data: data,
                 message: "Lấy thông tin ca làm việc thành công.",
                 status: 200
+            ));
+        }
+
+        [HttpPost("datapaging")]
+        public IActionResult DataPaging([FromBody] PagingRequest pagingRequest)
+        {
+            var data = _shiftService.DataPaging(pagingRequest);
+
+            return StatusCode(StatusCodes.Status200OK, ResponseResult.Success(
+                data: data,
+                message: "Lấy dữ liệu thành công.",
+                status: StatusCodes.Status200OK
             ));
         }
 

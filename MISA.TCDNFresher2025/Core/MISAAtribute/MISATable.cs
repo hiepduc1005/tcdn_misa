@@ -1,0 +1,24 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace MISA.Core.MISAAtribute
+{
+
+    /// <summary>
+    /// Attribute để đánh dấu tên bảng của một entity
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    public class MISATable : Attribute
+    {
+        /// <summary>
+        /// Tên bảng trong database
+        /// </summary>
+        public string Name { get; }
+
+        public MISATable(string name)
+        {
+            Name = name;
+        }
+    }
+}

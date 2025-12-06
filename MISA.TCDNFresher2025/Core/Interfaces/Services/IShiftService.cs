@@ -1,4 +1,5 @@
-﻿using MISA.Core.Dtos.Shift;
+﻿using MISA.Core.Dtos.Common;
+using MISA.Core.Dtos.Shift;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -26,6 +27,16 @@ namespace MISA.Core.Interfaces.Services
         /// <param name="shiftId">Id của ca làm việc cần lấy.</param>
         /// <returns>Thông tin chi tiết của ca làm việc.</returns>
         ShiftResponseDto GetShiftById(Guid shiftId);
+
+        /// <summary>
+        /// Lấy danh sách ca làm việc theo phân trang, kèm điều kiện lọc và sắp xếp.
+        /// </summary>
+        /// <param name="pagingRequest">Đối tượng PagingRequest chứa thông tin pageIndex, pageSize, filters và sorts.</param>
+        /// <returns>Đối tượng PagingResult chứa dữ liệu ca làm việc phân trang.</returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
+        PagingResult<ShiftResponseDto> DataPaging(PagingRequest pagingRequest);
 
         /// <summary>
         /// Thêm mới một ca làm việc.

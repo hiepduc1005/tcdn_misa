@@ -73,7 +73,7 @@
             <div class="button-collapse flex flex-row content-center align-center" @click="toggleCollapse">
                 <div class="icon icon-collapse" :style="isCollapse ? 'transform: rotate(180deg)' : ''"></div>
                 
-                <span style="margin-left: 8px;">Collapse</span>
+                <span style="margin-left: 8px;">Thu gọn</span>
             </div>
         </div>
     </div>

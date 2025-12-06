@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MISA.Core.Dtos.Common;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -63,5 +64,18 @@ namespace Core.Interfaces.Repositories
         /// Created By: hiepnd - 12/2025
         /// </remarks>
         void Delete(Guid entityId);
+
+        /// <summary>
+        /// Lấy danh sách dữ liệu có phân trang, kết hợp lọc và sắp xếp.
+        /// </summary>
+        /// <param name="pageIndex">Số trang hiện tại (bắt đầu từ 1).</param>
+        /// <param name="pageSize">Số lượng bản ghi trên một trang.</param>
+        /// <param name="filters">Danh sách các điều kiện lọc (nếu có).</param>
+        /// <param name="sorts">Danh sách các điều kiện sắp xếp (nếu có).</param>
+        /// <returns>Đối tượng chứa danh sách dữ liệu và tổng số bản ghi tìm thấy.</returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
+        PagingResult<T> getDataPaging(int pageIndex, int pageSize, List<FilterItem> filters = null, List<SortItem> sorts = null);
     }
 }

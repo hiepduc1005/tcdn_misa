@@ -1,5 +1,6 @@
 ﻿using Core.Entities;
 using Core.Interfaces.Repositories;
+using MISA.Core.Dtos.Common;
 using MISA.Core.Dtos.Shift;
 using MISA.Core.Exceptions;
 using MISA.Core.Interfaces.Services;
@@ -24,6 +25,7 @@ namespace MISA.Core.Services
         public ShiftService(IShiftRepository shiftRepository)
         {
             this._shiftRepository = shiftRepository;
+            
         }
 
         /// <summary>
@@ -143,6 +145,37 @@ namespace MISA.Core.Services
                 .ToList();
 
             return shiftResponseList;
+        }
+
+        /// <summary>
+        /// Lấy danh sách ca làm việc theo phân trang, kèm điều kiện lọc và sắp xếp.
+        /// </summary>
+        /// <param name="pagingRequest">Đối tượng PagingRequest chứa thông tin pageIndex, pageSize, filters và sorts.</param>
+        /// <returns>Đối tượng PagingResult chứa dữ liệu ca làm việc phân trang.</returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
+        public PagingResult<ShiftResponseDto> DataPaging(PagingRequest pagingRequest)
+        {
+            PagingResult<Shift> pagingResult = _shiftRepository.getDataPaging(
+                pagingRequest.PageIndex,
+                pagingRequest.PageSize,
+                pagingRequest.filterItems,
+                pagingRequest.sortItems
+            );
+
+            var shiftResponseList = pagingResult.DataPaging
+                .Select(shift => AutoMapperService<Shift, ShiftResponseDto>.Map(shift))
+                .ToList();
+
+            return new PagingResult<ShiftResponseDto>
+            {
+                CurrentPage = pagingResult.CurrentPage,
+                PageSize = pagingResult.PageSize,
+                TotalRecords = pagingResult.TotalRecords,
+
+                DataPaging = shiftResponseList // Gán danh sách DTO đã map
+            };
         }
 
 
