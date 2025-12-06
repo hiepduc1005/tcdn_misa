@@ -1,0 +1,280 @@
+/* 1. Use a more-intuitive box-sizing model */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+
+/* 2. Remove default margin */
+* {
+  margin: 0;
+}
+
+input:focus {
+    outline: none;
+    border: none;
+}
+
+/* 3. Enable keyword animations */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.2s ease;
+}
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0.5;
+}
+.fade-slide-enter-to,
+.fade-slide-leave-from {
+  opacity: 1;
+}
+
+
+
+body {
+  /* 4. Add accessible line-height */
+  /* 5. Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    background: #e5e7eb;
+    overflow: hidden;
+    font-family: Inter;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: Inter, Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    color: #111827;
+    font-size: 13px;
+    font-weight: 400;
+    user-select: none;
+    -webkit-user-select: text;
+    width: 100%;
+}
+
+html{
+	width: 100%;
+	height: 100%;
+}
+
+/* 6. Improve media defaults */
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 7. Inherit fonts for form controls */
+input, button, textarea, select {
+  font: inherit;
+}
+
+/* 8. Avoid text overflows */
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+/* 9. Improve line wrapping */
+p {
+  text-wrap: pretty;
+}
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+/*
+  10. Create a root stacking context
+*/
+#root, #__next {
+  isolation: isolate;
+}
+
+
+.flex{
+    display: flex;
+}
+
+.flex-1{
+  flex: 1 1 0%;
+}
+
+.flex-column{
+    flex-direction: column;
+}
+
+.flex-row{
+    flex-direction:  row;
+}
+
+.flex-end{
+  justify-content: flex-end;
+}
+
+.items-start {
+    align-items: flex-start;
+}
+
+.between{
+    justify-content: space-between;
+}
+
+.align-center{
+    align-items: center;
+}
+
+.content-center{
+    justify-content: center;
+}
+
+.white{
+    color: white;
+}
+
+.relative{
+    position: relative;
+}
+
+.absolute{
+    position: absolute;
+}
+
+.pointer{
+    cursor: pointer;
+}
+
+
+.sticky-left {
+    position: sticky !important;
+    left: 0;
+    z-index: 10;
+    background: white;
+}
+
+.sticky-top{
+    position: sticky !important;
+    top: 0;
+    z-index: 20;
+    background: white;
+}
+
+.sticky-left.sticky-top {
+    z-index: 30;
+}
+
+.stick-bottom{
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: white;
+}
+
+.sticky-right {
+    position: sticky;
+    right: 0;
+    z-index: 10;
+    background: white;
+    min-width: 52px;
+    width: 52px;
+    /* display: flex;
+    align-items: center;
+    justify-content: center; */
+}
+
+.sticky{
+  position: sticky;
+}
+
+.bg-white{
+  background-color: white !important;
+}
+
+.display-none{
+    display: none;
+}
+
+.display-block{
+    display: block;
+}
+
+.fullw{
+  width: 100%;
+}
+
+.fullh{
+  height: 100%;
+}
+
+.nav-separator{
+  width: 1px;
+  height: 16px;
+  background: #D1D5DB;
+  align-self: center;
+  border-radius: 1px;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.bold{
+  font-weight: 700;
+}
+
+.feature-btn{
+  cursor: pointer;
+  transition: all ease .1s;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: transparent; 
+    z-index: 999; 
+}
+
+.form-group{
+  margin-bottom: 16px;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.field-required{
+  color: #e54848;
+  font-size: 20px;
+}
+
+.form-group label{
+  color: #262626;
+  display: block;
+  font-weight: 600;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.h-28 {
+  max-height: 28px;
+  min-height: 28px;
+}
+
+
