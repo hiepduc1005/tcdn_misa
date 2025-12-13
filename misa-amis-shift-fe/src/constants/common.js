@@ -59,6 +59,13 @@ export const TEXT_FILTER_OPERATORS = [
     { value: 'ends_with', label: 'Kết thúc với' }
 ];
 
+export const COLUMN_TYPE = {
+    TEXT: 'text',
+    NUMBER: 'number',
+    SELECT: 'select',
+    DATE : 'date',
+}
+
 /**
  * Các toán tử filter dành cho number và date.
  *

@@ -16,5 +16,13 @@ namespace Core.Interfaces.Repositories
     public interface IShiftRepository : IBaseRepository<Shift>
     {
         bool CheckShiftCodeExists(string shiftCode);
+
+        int ActivateShifts(List<Guid> shiftIds);
+
+        int InactivateShifts(List<Guid> shiftIds);
+
+        int DeleteShifts(List<Guid> shiftIds);
+
+        List<Shift> SearchShifts(string keyword);
     }
 }

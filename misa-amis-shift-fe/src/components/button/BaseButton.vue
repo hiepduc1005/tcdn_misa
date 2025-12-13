@@ -73,8 +73,9 @@ const emit = defineEmits(["click"])
 /* danger-outline */
 
 .btn-danger-outline {
-  border-color: #dc2626;
+  border: 1px solid #dc2626;
   color: #dc2626;
+
 }
 .btn-danger-outline:hover {
   background-color: #fee2e2;
@@ -112,8 +113,9 @@ const emit = defineEmits(["click"])
 
 
 .btn-text-neutral:hover{
-  background-color: #f3f4f6;
+  background-color: #e5e7eb;
 }
+
 
 .btn-text-neutral:disabled{
   cursor: not-allowed;

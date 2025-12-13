@@ -34,5 +34,8 @@ namespace MISA.Core.Dtos.Shift
         public double BreakingTime { get; set; }
 
         public bool Inactive { get; set; }
+
+        public string Description { get; set; }
+
     }
 }

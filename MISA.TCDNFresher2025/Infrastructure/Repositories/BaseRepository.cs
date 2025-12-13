@@ -1,4 +1,5 @@
-﻿using Core.Interfaces.Repositories;
+﻿using Core.Entities;
+using Core.Interfaces.Repositories;
 using Dapper;
 using Infrastructure.Utils;
 using Microsoft.Extensions.Configuration;
@@ -176,7 +177,7 @@ namespace Infrastructure.Repositories
                 // Nếu là id thì lấy để không set id và làm where clause
                 if (prop.Name.Equals(propertyId))
                 {
-                    parameters.Add($"@{prop.Name}", prop.GetValue(entity));
+                    parameters.Add($"@{propertyId}", prop.GetValue(entity));
 
                     //Tiếp tục k chạy phần dưới để k set id
                     continue;
@@ -189,7 +190,7 @@ namespace Infrastructure.Repositories
                 parameters.Add($"@{prop.Name}", prop.GetValue(entity));
 
             }
-
+            
             // Bỏ dấu phẩy ở cuối
             var setClauseString = setClause.ToString().TrimEnd(',');
 
@@ -207,14 +208,15 @@ namespace Infrastructure.Repositories
         /// <param name="filters">Danh sách các điều kiện lọc (nếu có).</param>
         /// <param name="sorts">Danh sách các điều kiện sắp xếp (nếu có).</param>
         /// <returns>Đối tượng chứa danh sách dữ liệu và tổng số bản ghi tìm thấy.</returns>
-        /// <remarks>
+        /// <remarks>  
         /// Created By: hiepnd - 12/2025
         /// </remarks>
-        public PagingResult<T> getDataPaging(int pageIndex, int pageSize, List<FilterItem> filters = null, List<SortItem> sorts = null)
+        public PagingResult<T> getDataPaging(int pageIndex, int pageSize, List<FilterItem> filters = null, List<FilterItem> customFilters = null, List<SortItem> sorts = null)
         {
             // Lấy tên table
             var tableName = GetTableName();
             var filterClause = new StringBuilder();
+            var customClause = new StringBuilder();
             var sortClause = new StringBuilder();
 
             var sqlPaging = new StringBuilder();
@@ -236,10 +238,10 @@ namespace Infrastructure.Repositories
                     var column = ReflectionHelper.GetColumnNameFromFieldName<T>(filter.Column);
 
                     // Tên param
-                    var paramName = $"@{column}{i}";
+                    var paramName = $"filter_{column}_{i}";
                     var filterResult = MISASqlMapper.MapOperatorToSql(@operator, column, value, paramName);
 
-                    // Nối AND nếu không phải filter đầu tiên
+                    // Nối AND nếu không phải filter đầu tiên 
                     if (i > 0)
                         filterClause.Append(" AND ");
 
@@ -250,10 +252,40 @@ namespace Infrastructure.Repositories
                         parameters.Add(paramName, filterResult.Value);
                 }
 
-                sqlPaging.Append($"WHERE {filterClause.ToString()} ");
             }
 
-            if(sorts != null && sorts.Count > 0)
+            if (customFilters != null && customFilters.Count > 0)
+            {
+                for (int i = 0; i < customFilters.Count; i++)
+                {
+                    var filter = customFilters[i];
+                    var column = ReflectionHelper.GetColumnNameFromFieldName<T>(filter.Column);
+                    var paramName = $"custom_{column}_{i}";
+                    var mapped = MISASqlMapper.MapOperatorToSql(filter.Operator, column, filter.Value, paramName);
+
+                    if (i > 0)
+                        customClause.Append(" OR ");
+
+                    customClause.Append(mapped.SqlClause);
+
+                    if (mapped.Value != null)
+                        parameters.Add(paramName, mapped.Value);
+                }
+            }
+
+            // Gom 2 cai filter và custom vào có dạng (filter1 AND filter2 ...) AND (custom1 OR custom2 ...)
+            var whereParts = new List<string>();
+
+            if (filterClause.Length > 0)
+                whereParts.Add($"({filterClause})");
+
+            if (customClause.Length > 0)
+                whereParts.Add($"({customClause})");
+
+            if (whereParts.Count > 0)
+                sqlPaging.Append("WHERE " + string.Join(" AND ", whereParts) + " ");
+
+            if (sorts != null && sorts.Count > 0)
             {
                 for (int i = 0; i < sorts.Count; i++)
                 {
@@ -275,7 +307,7 @@ namespace Infrastructure.Repositories
             {
                 sqlPaging.Append($"ORDER BY created_date DESC ");
             }
-
+            
             // page index bắt đầu từ 1 
             // Nếu pageIndex bé hơn hoặc = 0 thì offset = 0
             var offset = (pageIndex > 0) ? ((pageIndex - 1) * pageSize) : 0;
@@ -283,8 +315,10 @@ namespace Infrastructure.Repositories
             sqlPaging.Append($"LIMIT {pageSize} OFFSET {offset}; ");
 
             sqlPaging.Append("SELECT COUNT(*) FROM " + tableName);
-            if (filterClause.Length > 0)
-                sqlPaging.Append(" WHERE " + filterClause.ToString());
+            if(whereParts.Count > 0)
+            {
+                sqlPaging.Append(" WHERE " + string.Join(" AND ", whereParts));
+            }
             sqlPaging.Append(";");
 
             using (var multi = dbConnection.QueryMultiple(sqlPaging.ToString(), parameters))

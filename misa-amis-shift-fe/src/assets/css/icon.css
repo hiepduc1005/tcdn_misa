@@ -623,7 +623,107 @@
     background-color: #4b5563;
 }
 
+.icon-warning{
+    mask-image: url('../icons/ICON.svg');
+    -webkit-mask-image: url('../icons/ICON.svg');
 
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-188px -169px;
+    -webkit-mask-position:-188px -169px;
+    background-color: #ea580c;
+    margin-right: 8px;
+}
+
+.filter-icon-active{
+    mask-image: url('../icons/ICON2.svg');
+    -webkit-mask-image: url('../icons/ICON2.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-720px 0px;
+    -webkit-mask-position:-720px 0px;
+    background-color: #4b5563;
+     margin-left: 8px;
+
+}
+
+.arrow-up-icon{
+    mask-image: url('../icons/ICON3.svg');
+    -webkit-mask-image: url('../icons/ICON3.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-512px 0px;
+    -webkit-mask-position:-512px 0px;
+    background-color: #4b5563;
+
+}
+
+.arrow-down-icon{
+    mask-image: url('../icons/ICON3.svg');
+    -webkit-mask-image: url('../icons/ICON3.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-528px 0px;
+    -webkit-mask-position:-528px 0px;
+    background-color: #4b5563;
+
+}
+
+.pin-icon{
+    mask-image: url('../icons/ICON3.svg');
+    -webkit-mask-image: url('../icons/ICON3.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-432px 0px;
+    -webkit-mask-position:-432px 0px;
+    background-color: #4b5563;
+}
+
+.unpin-icon{
+    mask-image: url('../icons/ICON3.svg');
+    -webkit-mask-image: url('../icons/ICON3.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-592px 0px;
+    -webkit-mask-position:-592px 0px;
+    background-color: #4b5563;
+}
+
+.infomation-icon{
+    mask-image: url('../icons/ICON.svg');
+    -webkit-mask-image: url('../icons/ICON.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-218px -167px;
+    -webkit-mask-position:-218px -167px;
+    background-color: #2563eb;
+    margin-right: 8px;
+}
+
+.export-icon {
+    mask-image: url('../icons/ICON2.svg');
+    -webkit-mask-image: url('../icons/ICON2.svg');
+
+    mask-repeat: no-repeat;
+    -webkit-mask-repeat: no-repeat;
+
+    mask-position:-976px 0px;
+    -webkit-mask-position:-976px 0px;
+    background-color: #4b5563;
+}
 
 
 

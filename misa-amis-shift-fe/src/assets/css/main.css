@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 /* 1. Use a more-intuitive box-sizing model */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -7,6 +10,12 @@
 /* 2. Remove default margin */
 * {
   margin: 0;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 input:focus {
@@ -49,13 +58,17 @@ body {
     flex-direction: column;
     height: 100vh;
     font-family: Inter, Helvetica, Arial, sans-serif !important;
-    font-size: 14px !important;
+    font-size: 13px !important;
     color: #111827;
     font-size: 13px;
     font-weight: 400;
     user-select: none;
     -webkit-user-select: text;
     width: 100%;
+}
+
+span{
+  font-size: 13px;
 }
 
 html{
@@ -277,4 +290,30 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 28px;
 }
 
+/* Toast */
+.el-message--success .el-message__content{
+  color: #111827 !important;
+}
+
+.el-message{
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+}
+.el-message .el-message-icon--success{
+  color: #16a34a;
+  
+}
+
+
+.fw400{
+  font-weight: 400;
+}
+
+
+.el-date-editor{
+  width: 100% !important;
+  height: 28px !important;
+  --el-input-focus-border: #16a34a;
+  --el-input-focus-border-color: #16a34a;
+}
 

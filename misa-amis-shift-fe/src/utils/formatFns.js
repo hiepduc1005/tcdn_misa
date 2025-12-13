@@ -15,3 +15,29 @@ import { unref } from "vue"
 export const convertToPlainObject = (proxyObj) => {
     return JSON.parse(JSON.stringify(unref(proxyObj)))
 }
+
+export function roundNumber(n) {
+    return Math.round(n);
+}
+
+/**
+ * Convert kiểu time  (hh:mm:ss) nhận được từ server thành hh:mm 
+ * 
+ *
+ * @author hiepnd
+ * @returns {object} Time đã được chuyển đổi.
+ */
+export const formatTimeToHHMM = (time) => {
+    if (typeof time === "number") {
+        return time;
+    }
+    
+    // "05:30:00" -> "05:30"  [start,end)
+    return time.substring(0, 5);
+};
+
+export const camelToPascalCase = (value) => {
+    if (!value) return "";
+    // Chữ cái đầu viết hoa + phần còn lại giữ nguyên
+    return value.charAt(0).toUpperCase() + value.slice(1)
+}

@@ -1,4 +1,6 @@
 <script setup>
+    import { useRouter } from 'vue-router';
+
     const props = defineProps({
         item: {
             type: Object,
@@ -15,6 +17,14 @@
             default: () => {}
         }
     })
+
+    const router = useRouter();
+
+    const handleClick = (item) => {
+        if(item.path){
+            router.push(item.path);
+        }
+    }
 </script>
 <template>
     <Teleport to="body">
@@ -32,7 +42,13 @@
                         <span>{{ child?.label }}</span>
                     </div>
                     <div class="flex flex-column pointer">
-                        <div  style="gap: 4px; height: 32px;" v-for="popoutBodyItem in child.items" :key="popoutBodyItem.index" class="body-item flex flex-row align-center">
+                        <div 
+                            style="gap: 4px; height: 32px;" 
+                            v-for="popoutBodyItem in child.items" 
+                            :key="popoutBodyItem.index" 
+                            class="body-item flex flex-row align-center"
+                            @click="handleClick(popoutBodyItem)"
+                        >
                             <div class="icon icon-turndown"></div>
                             <span>{{ popoutBodyItem.title }}</span>
                         </div>

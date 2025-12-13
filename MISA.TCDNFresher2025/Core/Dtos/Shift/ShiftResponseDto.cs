@@ -35,6 +35,8 @@ namespace MISA.Core.Dtos.Shift
 
         public bool Inactive { get; set; }
 
+        public string Description { get; set; }
+
         public string CreatedBy { get; set; }
 
         public DateTime CreatedDate { get; set; }

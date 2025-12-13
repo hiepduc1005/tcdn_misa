@@ -29,12 +29,19 @@ namespace MISA.Core.Dtos.Common
         /// <summary>
         /// Danh sách các điều kiện lọc dữ liệu
         /// </summary>
-        public List<FilterItem> filterItems  { get; set; } = new List<FilterItem>();
+        public List<FilterItem> FilterItems  { get; set; } = new List<FilterItem>();
+
+
+        /// <summary>
+        /// Điều kiện lọc dành cho search
+        /// </summary>
+        public List<FilterItem> CustomFilters { get; set; } = new List<FilterItem>();
+
 
         /// <summary>
         /// Danh sách các điều kiện sắp xếp dữ liệu
         /// </summary>
-        public List<SortItem> sortItems { get; set; } = new List<SortItem>();
+        public List<SortItem> SortItems { get; set; } = new List<SortItem>();
 
     }
 }

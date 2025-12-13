@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, defineEmits } from 'vue';
+import { defineProps, defineEmits, computed } from 'vue';
 
 //#region Props
 const props = defineProps({
@@ -30,12 +30,12 @@ const props = defineProps({
     // Format hiển thị trên input (ví dụ: YYYY/MM/DD)
     format: {
         type: String,
-        default: 'YYYY-MM-DD'
+        default: 'DD/MM/YYYY'
     },
     // Giá trị thật sự sẽ được bind (ví dụ: timestamp, Date object, hay string)
     valueFormat: {
         type: String,
-        default: 'YYYY-MM-DD'
+        default: 'DD/MM/YYYY'
     },
     // Cho phép xóa giá trị hay không
     clearable: {
@@ -57,17 +57,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'change']);
 
-// Xử lý sự kiện thay đổi giá trị và emit ra ngoài
-const handleChange = (value) => {
-    emit('update:modelValue', value);
-    emit('change', value);
-};
+const value = computed({
+    get() {
+        return props.modelValue;
+    },
+    set(val) {
+        emit('update:modelValue', val);
+        emit('change', val);
+    }
+});
 </script>
 
 <template>
     <el-date-picker
-        :v-model="modelValue"
-        @change="handleChange"
+        v-model="value"
         :range-separator="props.rangeSeparator"
         :type="props.type"
         :placeholder="props.placeholder"

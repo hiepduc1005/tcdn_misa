@@ -10,20 +10,27 @@ namespace MISA.Infrastructure.Utils
     {
         public static (string SqlClause, object? Value) MapOperatorToSql(string filterOperator, string columnName, object value, string paramName)
         {
-            return filterOperator switch
+            // Trường hợp filter trường Inactive
+            if (columnName.Equals("inactive")) 
             {
+               
+                return ($"{columnName} = @{paramName}",  Boolean.Parse(filterOperator));
+            }
+            
+            return filterOperator switch
+            { 
                 FilterConstants.Equal => ($"{columnName} = @{paramName}", value),
                 FilterConstants.NotEqual => ($"{columnName} <> @{paramName}", value),
                 FilterConstants.Contains => ($"{columnName} LIKE CONCAT('%', @{paramName}, '%')", value),
                 FilterConstants.NotContains => ($"{columnName} NOT LIKE CONCAT('%', @{paramName}, '%')", value),
-                FilterConstants.StartsWith => ($"{columnName} LIKE CONCAT(@{paramName}, '%')", value),
+                FilterConstants.StartsWith => ($"{columnName} LIKE CONCAT(@{paramName}, '%')", value),  
                 FilterConstants.EndsWith => ($"{columnName} LIKE CONCAT('%', @{paramName})", value),
                 FilterConstants.LessThan => ($"{columnName} < @{paramName}", value),
                 FilterConstants.LessThanOrEqual => ($"{columnName} <= @{paramName}", value),
                 FilterConstants.GreaterThan => ($"{columnName} > @{paramName}", value),
                 FilterConstants.GreaterThanOrEqual => ($"{columnName} >= @{paramName}", value),
-                FilterConstants.IsEmpty => ($"({columnName} IS NULL OR {paramName} = '')", null),
-                FilterConstants.IsNotEmpty => ($"({columnName} IS NOT NULL AND {paramName} != '')", null),
+                FilterConstants.IsEmpty => ($"({columnName} IS NULL OR {columnName} = '')", null),
+                FilterConstants.IsNotEmpty => ($"({columnName} IS NOT NULL AND {columnName} != '')", null),
                 _ => throw new Exception($"Không hỗ trợ operator: {filterOperator}")
             };
         }
@@ -37,5 +44,5 @@ namespace MISA.Infrastructure.Utils
 
             return $"{columnName} {direction}";
         }
-    }
+    } 
 }

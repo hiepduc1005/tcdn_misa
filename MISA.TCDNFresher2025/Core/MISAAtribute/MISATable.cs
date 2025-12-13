@@ -14,7 +14,9 @@ namespace MISA.Core.MISAAtribute
         /// <summary>
         /// Tên bảng trong database
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
+
+        public string Label { get; set; }
 
         public MISATable(string name)
         {

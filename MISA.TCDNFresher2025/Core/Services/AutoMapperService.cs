@@ -34,10 +34,10 @@ namespace MISA.Core.Services
             // Lấy tất cả property public
             var sourceProps = typeof(T).GetProperties();
             var destProps = typeof(Y).GetProperties();
-
+            
             foreach (var sourceProp in sourceProps)
-            { 
-                // Tìm prop cùng tên và kiểu dữ liệu trong destination
+            {
+                // Tìm prop cùng tên và kiểu dữ liệu trong destination 
                 var destProp = Array.Find(destProps, p => p.Name == sourceProp.Name && p.PropertyType == sourceProp.PropertyType);
 
                 // Nếu như tìm được thì set dữ liệu cho prop của destination

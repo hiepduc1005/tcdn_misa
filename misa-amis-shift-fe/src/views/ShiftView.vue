@@ -1,316 +1,339 @@
 <script setup>
-import { ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import BaseButton from '../components/button/BaseButton.vue';
 import ShiftBody from './ShiftBody.vue';
 import ShiftFormModal from './ShiftFormModal.vue';
-import { SHIFT_MODAL_TYPE } from '../constants/common';
+import { COLUMN_TYPE, NUMBER_DATE_FILTER_OPERATORS, SHIFT_MODAL_TYPE, TEXT_FILTER_OPERATORS } from '../constants/common';
+import ShiftAPI from '../apis/components/shift/ShiftAPI';
+import { formatDate } from '../utils/formatDateFns';
+import { camelToPascalCase, formatTimeToHHMM } from '../utils/formatFns';
+import BaseToolTip from '../components/tooltip/BaseToolTip.vue';
+import BaseModal from '../components/modal/BaseModal.vue';
+import { ElMessage } from 'element-plus';
 
-const datas = ref([
-        {
-            "ShiftCode": "1",
-            "ShiftName": "12",
-            "BeginShiftTime": "00:30:00",
-            "EndShiftTime": "03:00:00",
-            "BeginBreakTime": "00:30:00",
-            "EndBreakTime": "01:00:00",
-            "WorkingTime": 2.0000000000,
-            "BreakingTime": 0.5000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-17T15:08:32.300+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-30T10:53:11.743+07:00",
-            "ShiftID": "c69c345c-cf17-49bc-bc34-e7850118a7c5"
-        },
-        {
-            "ShiftCode": "12345678901234567890123aa",
-            "ShiftName": "12345678901234567890123456789012345678901234567890",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "03:00:00",
-            "BeginBreakTime": "00:30:00",
-            "EndBreakTime": "01:00:00",
-            "WorkingTime": 2.5000000000,
-            "BreakingTime": 0.5000000000,
-            "Inactive": true,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-20T14:35:45.111+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-30T22:09:46.160+07:00",
-            "ShiftID": "216645ef-d6e9-4f47-b1f0-2641ec6c00ba"
-        },
-        {
-            "ShiftCode": "a",
-            "ShiftName": "s",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "02:30:00",
-            "BeginBreakTime": "00:30:00",
-            "EndBreakTime": "02:00:00",
-            "WorkingTime": 1.0000000000,
-            "BreakingTime": 1.5000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-19T14:51:47.023+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-12-01T00:45:29.543+07:00",
-            "ShiftID": "0d402e79-3630-4b02-90bf-61a20a5fefd4"
-        },
-        {
-            "ShiftCode": "â",
-            "ShiftName": "aaaaa",
-            "BeginShiftTime": "00:30:00",
-            "EndShiftTime": "01:30:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 1.0000000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-22T11:03:47.260+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-22T11:03:47.260+07:00",
-            "ShiftID": "9288aee9-01c7-475a-a051-5fce44427608"
-        },
-        {
-            "ShiftCode": "aaaa",
-            "ShiftName": "aaa",
-            "BeginShiftTime": "01:00:00",
-            "EndShiftTime": "00:00:00",
-            "BeginBreakTime": "01:30:00",
-            "EndBreakTime": "01:00:00",
-            "WorkingTime": -0.5000000000,
-            "BreakingTime": 23.5000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-30T18:55:26.767+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-30T18:55:26.768+07:00",
-            "ShiftID": "97a09e19-a993-4441-87c4-60707a4a8ed3"
-        },
-        {
-            "ShiftCode": "aaaaaaaaaaa",
-            "ShiftName": "aaa",
-            "BeginShiftTime": "01:00:00",
-            "EndShiftTime": "11:11:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 10.1833000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-30T18:57:45.690+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-30T18:57:45.692+07:00",
-            "ShiftID": "66e90d84-cd25-4d5f-959c-27ae2221229e"
-        },
-        {
-            "ShiftCode": "aaaaaaaavvvvv",
-            "ShiftName": "ca 1",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "12:30:00",
-            "BeginBreakTime": "00:30:00",
-            "EndBreakTime": "00:00:00",
-            "WorkingTime": -11.0000000000,
-            "BreakingTime": 23.5000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-22T18:57:41.333+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-29T16:57:22.135+07:00",
-            "ShiftID": "731e678f-7778-4f42-a4d4-a58a62c406ed"
-        },
-        {
-            "ShiftCode": "aaacccc",
-            "ShiftName": "aaa",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "11:11:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 11.1833000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-22T00:12:51.795+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-22T00:12:51.795+07:00",
-            "ShiftID": "7f5e2578-ac33-44c8-b474-82dafb3adf00"
-        },
-        {
-            "ShiftCode": "ac",
-            "ShiftName": "âc",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "23:30:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 23.5000000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-20T16:38:33.738+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-20T16:38:52.832+07:00",
-            "ShiftID": "a266893a-19da-4455-a26c-c4d07f8abca1"
-        },
-        {
-            "ShiftCode": "acvcvc",
-            "ShiftName": "a",
-            "BeginShiftTime": "01:30:00",
-            "EndShiftTime": "14:00:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 12.5000000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-21T22:20:44.184+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-21T22:20:44.184+07:00",
-            "ShiftID": "b2e8fac5-ac66-4ad0-ad2b-178a40be655f"
-        },
-        {
-            "ShiftCode": "axxx",
-            "ShiftName": "c",
-            "BeginShiftTime": "00:30:00",
-            "EndShiftTime": "11:11:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 10.6833000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-21T22:12:04.466+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-21T22:12:04.466+07:00",
-            "ShiftID": "075fd3ed-63fb-4c36-9d3b-20490302025b"
-        },
-        {
-            "ShiftCode": "haghga",
-            "ShiftName": "hsgija",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "11:33:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 11.5500000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-22T00:13:34.129+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-22T00:13:34.129+07:00",
-            "ShiftID": "faeeb00f-99d4-49b8-871d-c60c5f980249"
-        },
-        {
-            "ShiftCode": "mới2",
-            "ShiftName": "ạh ouhfoha",
-            "BeginShiftTime": "00:30:00",
-            "EndShiftTime": "18:27:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 17.9500000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-22T00:13:58.683+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-22T00:45:04.774+07:00",
-            "ShiftID": "81a9817b-5bfc-4067-a2fa-4d30c5849567"
-        },
-        {
-            "ShiftCode": "w",
-            "ShiftName": "wwwwa",
-            "BeginShiftTime": "12:05:00",
-            "EndShiftTime": "00:30:00",
-            "BeginBreakTime": null,
-            "EndBreakTime": null,
-            "WorkingTime": 12.4167000000,
-            "BreakingTime": 0.0000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-22T11:37:27.121+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-22T11:38:53.082+07:00",
-            "ShiftID": "22bf6b2f-ceb6-492b-8f12-e1de364577e0"
-        },
-        {
-            "ShiftCode": "xxxx",
-            "ShiftName": "xxxx",
-            "BeginShiftTime": "00:00:00",
-            "EndShiftTime": "05:00:00",
-            "BeginBreakTime": "00:30:00",
-            "EndBreakTime": "02:00:00",
-            "WorkingTime": 3.5000000000,
-            "BreakingTime": 1.5000000000,
-            "Inactive": false,
-            "CreatedBy": "Đinh Nga QTHT",
-            "CreatedDate": "2025-11-30T20:38:35.884+07:00",
-            "ModifiedBy": "Đinh Nga QTHT",
-            "ModifiedDate": "2025-11-30T20:38:35.884+07:00",
-            "ShiftID": "9fd64887-bc3c-4933-9419-1e9fec52a2d5"
-        }
-    ]);
 
-    const columns = [
-        { 
-            field: "ShiftCode", 
-            label: "Mã ca", 
-            filterable: true, 
-        },
-        { 
-            field: "ShiftName", 
-            label: "Tên ca", 
-            filterable: true,
-        },
-        { 
-            field: "Inactive", 
-            label: "Trạng thái", 
-            filterable: true, 
-        },
-        { 
-            field: "BeginShiftTime", 
-            label: "Giờ vào ca", 
-            filterable: false, 
-        },
-        { 
-            field: "EndShiftTime", 
-            label: "Giờ hết ca", 
-            filterable: false, 
-        },
-        { 
-            field: "BeginBreakTime", 
-            label: "Bắt đầu nghỉ giữa ca", 
-            filterable: false, 
-        },
-        { 
-            field: "EndBreakTime", 
-            label: "Kết thúc nghỉ giữa ca", 
-            filterable: false, 
-        },
-        { 
-            field: "WorkingTime", 
-            label: "Thời gian làm việc (giờ)", 
-            filterable: true, 
-        },
-        { 
-            field: "BreakingTime", 
-            label: "Thời gian nghỉ giữa ca (giờ)", 
-            filterable: true, 
-        },
-        { field: "CreatedBy", label: "Người tạo", filterable: true },
-        { field: "CreatedDate", label: "Ngày tạo", filterable: true },
-        { field: "ModifiedBy", label: "Người sửa", filterable: true },
-        { field: "ModifiedDate", label: "Ngày sửa", filterable: true },
-    ];
+const pagingState = reactive({
+  filterItems: [],
+  customFilters: [],
+  sortItems: [],
+  pageSize: 20,
+  pageIndex: 1
+});
+const pagingResult = reactive({
+  data: [],
+  totalRecord: 0,
+  totalPage: 0,
+});
 
-    const showFormModal = ref(false);
-
-    const handleShowFormModal = () => {
-        showFormModal.value = true;
-    }
-
-    const handleCloseModal = () => {
-        showFormModal.value = false;
-    }
-
+const loadDataPagingShift = async () => {
     
+    const response = await ShiftAPI.paging(pagingState);
+    if(response.errors && response.statusCode >= 400){
+        console.error("loadDataPagingShift :" , response.errors);
+        return;
+    }
+
+    pagingResult.data = response?.data.data?.dataPaging;
+    pagingResult.totalPage = response?.data.data?.totalPages;
+    pagingResult.totalRecord = response?.data.data?.totalRecords;
+
+}
+
+const handleInactiveAll = async (shiftIds) => {
+    if (!Array.isArray(shiftIds)) {
+        shiftIds = [shiftIds];
+    }
+    await ShiftAPI.inactiveAll(shiftIds);
+}
+
+const handleActiveAll = async (shiftIds) => {
+    if (!Array.isArray(shiftIds)) {
+        shiftIds = [shiftIds];
+    }
+    await ShiftAPI.activeAll(shiftIds);
+}
+
+
+watch(
+    () => [
+    pagingState.pageSize,
+    pagingState.pageIndex,
+    pagingState.sortItems,
+    pagingState.customFilters,
+    pagingState.filterItems
+  ],
+    () => {
+        loadDataPagingShift();
+    },
+    {deep: true, immediate: true}
+)
+
+const columns = [
+    { 
+        field: "shiftCode", 
+        label: "Mã ca", 
+        filterable: true,
+        type: COLUMN_TYPE.TEXT,
+        options:  TEXT_FILTER_OPERATORS,
+        right: false, 
+    },
+    { 
+        field: "shiftName", 
+        label: "Tên ca", 
+        filterable: true,
+        options:  TEXT_FILTER_OPERATORS,
+        type: COLUMN_TYPE.TEXT,
+        right: false, 
+    },
+   
+    { 
+        field: "beginShiftTime", 
+        label: "Giờ vào ca", 
+        filterable: false, 
+        type: COLUMN_TYPE.NUMBER,
+        right: false, 
+    },
+    { 
+        field: "endShiftTime", 
+        label: "Giờ hết ca", 
+        filterable: false, 
+        type: COLUMN_TYPE.NUMBER,
+        right: false, 
+    },
+    { 
+        field: "beginBreakTime", 
+        label: "Bắt đầu nghỉ giữa ca", 
+        filterable: false, 
+        type: COLUMN_TYPE.NUMBER,
+        right: false, 
+    },
+    { 
+        field: "endBreakTime", 
+        label: "Kết thúc nghỉ giữa ca", 
+        filterable: false, 
+        type: COLUMN_TYPE.NUMBER,
+        right: false, 
+    },
+    { 
+        field: "workingTime", 
+        label: "Thời gian làm việc (giờ)", 
+        type: COLUMN_TYPE.NUMBER,
+        options:  NUMBER_DATE_FILTER_OPERATORS,
+        filterable: true, 
+        right: true, 
+    },
+    { 
+        field: "breakingTime", 
+        label: "Thời gian nghỉ giữa ca (giờ)",
+        type: COLUMN_TYPE.NUMBER,
+        options:  NUMBER_DATE_FILTER_OPERATORS,
+        filterable: true, 
+        right: true, 
+    },
+    { 
+        field: "inactive", 
+        label: "Trạng thái",
+        type: COLUMN_TYPE.SELECT,
+        options: [
+            { label: 'Đang sử dụng', value: false },
+            { label: 'Ngừng sử dụng', value: true }
+        ],
+        filterable: true, 
+        right: false, 
+    },
+    { field: "createdBy", label: "Người tạo", filterable: true, type: COLUMN_TYPE.TEXT,  options:  TEXT_FILTER_OPERATORS, right: false },
+    { field: "createdDate", label: "Ngày tạo", filterable: true, type: COLUMN_TYPE.DATE,   options:  NUMBER_DATE_FILTER_OPERATORS, right: false },
+    { field: "modifiedBy", label: "Người sửa", filterable: true, type: COLUMN_TYPE.TEXT, options:  TEXT_FILTER_OPERATORS, right: false},
+    { field: "modifiedDate", label: "Ngày sửa", filterable: true, type: COLUMN_TYPE.DATE, options:  NUMBER_DATE_FILTER_OPERATORS, right: false},
+];
+
+const showFormModal = ref(false);
+const selectedShift = ref({});
+const modalType = ref(SHIFT_MODAL_TYPE.CREATE);
+
+const handleShowFormModal = (type = SHIFT_MODAL_TYPE.CREATE, data = {}) => {
+    modalType.value = type;
+    selectedShift.value = data;
+    showFormModal.value = true;
+}
+
+const handleCloseModal = () => {
+    showFormModal.value = false;
+}
+
+const handleEdit = (row) => {
+    handleShowFormModal(SHIFT_MODAL_TYPE.UPDATE, row);
+}
+
+const handleDuplicate = (row) => {
+    const duplicatedData = { ...row };
+    // Xóa định danh để tạo mới
+    delete duplicatedData.shiftCode;
+    delete duplicatedData.shiftId;
+    
+    handleShowFormModal(SHIFT_MODAL_TYPE.CREATE, duplicatedData);
+}
+
+const handleUpdateStatus = async ({ ids, status }) => {
+    pagingResult.data.forEach(item => {
+        if (ids.includes(item.shiftId)) {
+
+            // Cập nhập ở frontend
+            item.inactive = status;
+            item.modifiedDate = new Date().toISOString();
+            item.modifiedBy = "Admin";
+        }
+    });
+
+
+    try {                                                                                                      
+        if (status === false) {                                                                                
+            await handleActiveAll(ids);                                                                     
+        } else {                                                                                              
+            await handleInactiveAll(ids);                                                                   
+        }                                                                                                     
+    } catch (error) {                                                                                          
+        console.error("Lỗi cập nhật trạng thái:", error);                                                      
+    }
+}
+
+const showDeleteModal = ref(false);
+const idsToDelete = ref([]);
+const deleteMessage = ref('');
+
+const handleRequestDelete = (shiftIds) => {
+    idsToDelete.value = shiftIds.shiftIds;
+    if (shiftIds.shiftIds.length === 1) {
+        // Tìm tên của ca làm việc cần xóa
+        const item = pagingResult.data.find(i => i.shiftId === shiftIds.shiftIds[0]);
+        const code = item ? item.shiftCode : '';
+        deleteMessage.value = `Ca làm việc <b>${code}</b> sau khi bị xóa sẽ không thể khôi phục. Bạn có muốn tiếp tục xóa không?`;
+    } else {
+        deleteMessage.value = `Các ca làm việc đã chọn sau khi bị xóa sẽ không thể khôi phục. Bạn có muốn tiếp tục xóa không?`;
+    }
+    showDeleteModal.value = true;
+};
+
+const confirmDelete = async () => {
+    try {
+        await ShiftAPI.deleteShifts(idsToDelete.value);
+        showSuccessToast("Xóa Ca làm việc thành công")
+        // Refresh lại dữ liệu sau khi xóa thành công
+        await loadDataPagingShift();
+        showDeleteModal.value = false;
+        idsToDelete.value = [];
+    } catch (error) {
+        console.error("Lỗi khi xóa:", error);
+        // Có thể thêm thông báo lỗi ở đây
+    }
+};
+
+const cancelDelete = () => {
+    showDeleteModal.value = false;
+    idsToDelete.value = [];
+};
+    
+const showSuccessToast = (message) => {
+  ElMessage({
+    message: message ,
+    type: "success",
+    customClass: "misa-toast",
+    duration: 3000,
+    showClose: true,
+    offset: 32
+    });
+}
+const handleSuccessCreate = async () => {
+    await loadDataPagingShift();
+    if(modalType === SHIFT_MODAL_TYPE.CREATE){
+        showSuccessToast("Thêm ca làm việc thành công");
+    }else showSuccessToast("Sửa ca làm việc thành công");
+}
+
+const handleSearch = (val) => {
+    const filterCode = {
+        'column' : "ShiftCode",
+        'value'  : val,
+        'operator' : 'contains'
+    }
+    const filterName = {
+        'column' : "ShiftName",
+        'value'  : val,
+        'operator' : 'contains'
+    }
+    const filterDescription = {
+        'column' : "Description",
+        'value'  : val,
+        'operator' : 'contains'
+    }
+
+    pagingState.customFilters = [filterCode,filterName,filterDescription];
+}
+
+const handleChangePageSize = (val) => {
+    pagingState.pageSize = val
+    pagingState.pageIndex = 1
+}
+
+const handleChangePageIndex = (val) => {
+    pagingState.pageIndex = val
+}
+
+
+const handleFilterChange = (filters) => {
+
+    pagingState.filterItems = filters.map(filter => {
+        return {
+            column: camelToPascalCase(filter.field),
+            value: filter.value + "",
+            operator: filter.operator + ""
+        }
+    });
+}
+
+// Xử lý khi sorts thay đổi
+const handleSortChange = (sorts) => {
+    pagingState.sortItems = sorts.map(sort => {
+        return {
+            fieldName: camelToPascalCase(sort.fieldName),
+            direction: sort.direction
+        }
+    })
+}
+
+// Xử lý export excel
+const handleExportExcel = async () => {
+    try {
+        const response = await ShiftAPI.exportExcel(pagingState);
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+
+        const contentDisposition = response.headers['content-disposition'];
+        let fileName = 'Danh_sach_ca.xlsx'; // Tên mặc định nếu không lấy được
+        
+        if (contentDisposition) {
+            const match = contentDisposition.match(/filename="?([^"]+)"?/);
+            if (match && match[1]) {
+                fileName = decodeURIComponent(match[1]); // Decode để hiển thị tiếng Việt đúng
+            }
+        }
+        link.setAttribute('download', fileName);
+
+        document.body.appendChild(link);
+        link.click();
+        
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Lỗi xuất khẩu:", error);
+        // toast.error("Có lỗi xảy ra khi xuất khẩu.");
+    } finally {
+        // Tắt loading
+        // isLoading.value = false;
+    }
+}
 
 </script>
 
@@ -321,7 +344,7 @@ const datas = ref([
             <div class="shiftview-header-addbtn">
                 <BaseButton
                     :type="'solid-brand'"
-                    @click="handleShowFormModal()"
+                    @click="handleShowFormModal(SHIFT_MODAL_TYPE.CREATE)"
                 >
                     <template #content>
                         <div class="icon16 icon-add-white"></div>
@@ -332,17 +355,134 @@ const datas = ref([
         </div>
         <div class="shifview-body">
             <ShiftBody
-                :datas="datas"
+                :datas="pagingResult.data"
                 :columns="columns"
+                :pageIndex="pagingState.pageIndex"
+                :pageSize="pagingState.pageSize"
+                :totalPage="pagingResult.totalPage"
+                :totalRecord="pagingResult.totalRecord"
+                @update-status="handleUpdateStatus"
+                @request-delete="handleRequestDelete"
+                @edit="handleEdit"
+                @duplicate="handleDuplicate"
+                @search="handleSearch"
+                @refresh="loadDataPagingShift"
+                @page-size="handleChangePageSize"
+                @page-index="handleChangePageIndex"
+                @filter="handleFilterChange"
+                @sort="handleSortChange"
+                @export="handleExportExcel"
             >
+                <template #body-inactive="{ value }">
+                    <div class="flex flex-row align-center" :class="value ? 'inactive' : 'active'">
+                        <span>{{ value ? 'Ngừng sử dụng' : 'Đang sử dụng' }}</span>
+                    </div>
+                </template>
+                <template #body-beginShiftTime="{ value }">
+                    <BaseToolTip :placement="'bottom-start'" :showArror="false">
+                        <template #title><span>{{ formatTimeToHHMM(value) }}</span></template>
+                        <template #content><span>{{ formatTimeToHHMM(value) }}</span></template>
+                    </BaseToolTip>
+                </template>
+                <template #body-endShiftTime="{ value }">
+                    <BaseToolTip :placement="'bottom-start'" :showArror="false">
+                        <template #title><span>{{ formatTimeToHHMM(value) }}</span></template>
+                        <template #content><span>{{ formatTimeToHHMM(value) }}</span></template>
+                    </BaseToolTip>
+                </template>
+                <template #body-beginBreakTime="{ value }">
+                    <BaseToolTip :placement="'bottom-start'" :showArror="false">
+                        <template #title><span>{{ formatTimeToHHMM(value) }}</span></template>
+                        <template #content><span>{{ formatTimeToHHMM(value) }}</span></template>
+                    </BaseToolTip>
+                </template>
+                <template #body-endBreakTime="{ value }">
+                    <BaseToolTip :placement="'bottom-start'" :showArror="false">
+                        <template #title><span>{{ formatTimeToHHMM(value) }}</span></template>
+                        <template #content><span>{{ formatTimeToHHMM(value) }}</span></template>
+                    </BaseToolTip>
+                </template>
+                <template #body-createdDate="{ value }">
+                    <BaseToolTip
+                        :placement="'bottom-start'"
+                        :showArror="false"
+                    >
+                        <template #title>
+                            <span>{{ formatDate(value) }}</span>
+                        </template>
 
+                        <template #content>
+                            <span>{{ formatDate(value) }}</span>
+                        </template>
+                    </BaseToolTip>
+                </template>
+                <template #body-modifiedDate="{ value }">
+                    <BaseToolTip
+                        :placement="'bottom-start'"
+                        :showArror="false"
+                    >
+                        <template #title>
+                            <span>{{ formatDate(value) }}</span>
+                        </template>
+
+                        <template #content>
+                            <span>{{ formatDate(value) }}</span>
+                        </template>
+                    </BaseToolTip>
+                </template>
+
+                
             </ShiftBody>
             <ShiftFormModal 
-                :modalType="SHIFT_MODAL_TYPE.CREATE"
+                :modalType="modalType"
+                :data="selectedShift"
                 :showModal="showFormModal"
+                :handleShowFormModal="handleShowFormModal"
                 @close="handleCloseModal()"
+                @success="handleSuccessCreate"
             />
         </div>
+
+        <BaseModal
+            :showModal="showDeleteModal"
+            :width="'width:432px;'"
+        >
+            <template #header>
+                <div class="delete-confirm-header flex flex-row align-center between">
+                    <div class="delete-confirm-header-right flex flex-row align-center">
+                        <div class="icon20 icon-warning"></div>
+                        <span>Xóa Ca làm việc</span>
+                    </div>
+                    <div class="delete-confirm-header-left">
+                        <div class="icon20 close-icon20 pointer" @click="cancelDelete"></div>
+                    </div>
+                </div>
+            </template>
+            <template #body>
+                <div class="delete-confirm-body" v-html="deleteMessage">
+                </div>
+            </template>
+            <template #footer>
+                <div class="delete-confirm-footer flex flex-row flex-end">
+                    <BaseButton
+                        type="outline-neutral"
+                        @click="cancelDelete"
+                    >
+                        <template #content>
+                            <span>Hủy</span>
+                        </template>
+                    </BaseButton>
+                    <BaseButton
+                        type="danger"
+                        @click="confirmDelete"
+                    >
+                        <template #content>
+                            <span>Xóa</span>
+                        </template>
+                    </BaseButton>
+                </div>
+            </template>
+        </BaseModal>
     </div>
 </template>
 
@@ -374,4 +514,50 @@ const datas = ref([
     height: 0;
 }
 
+.inactive{
+    background-color: #fee2e2;
+    color: #dc2626;
+    width: -moz-fit-content;
+    width: fit-content;
+    padding: 5px 8px;
+    border-radius: 999px;
+}
+
+.active{
+    background-color: #ebfef6;
+    color: #009b71;
+    padding: 5px 8px;
+    border-radius: 999px;
+    width: fit-content;
+}
+
+/* Delete confirm */
+
+.delete-confirm-header{
+    padding: 16px 16px 0 16px;
+    margin-bottom: 16px;
+}
+.delete-confirm-header-right{
+    font-weight: 600;
+    color: #111827;
+    font-size: 20px;
+
+}
+
+.delete-confirm-body{
+    padding: 0 16px 0 16px;
+    font-size: 13px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-weight: 400;
+    line-height: 20px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    margin-bottom: 16px;
+}
+
+.delete-confirm-footer{
+    padding: 0 16px 16px 16px;
+    gap: 8px;
+}
 </style>

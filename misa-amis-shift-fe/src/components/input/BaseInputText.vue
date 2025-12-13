@@ -1,6 +1,13 @@
 <script setup>
+import { computed, ref } from 'vue';
+import BaseToolTip from '../tooltip/BaseToolTip.vue';
+
 //#region Props
 const props = defineProps({
+    modelValue: {
+        type: [String, Number],
+        default: ''
+    },
     type: {
         type: String,
         default: 'text'
@@ -13,28 +20,85 @@ const props = defineProps({
         type: [String,Object],
         default:""
     },
+    inputColor: {
+        type: [String,Object],
+        default:""
+    },
+    
     disabled : {
+        type: Boolean,
+        default: false
+    },
+    required: {
+        type: Boolean,
+        default: false
+    },
+    errorMessage: {
+        type: String,
+        default: 'Trường này không được để trống'
+    },
+    isError: {
         type: Boolean,
         default: false
     }
 })
 //#endregion
+
+const emit = defineEmits(['update:modelValue', 'blur'])
+const internalError = ref(false);
+
+const hasError = computed(() => props.isError || internalError.value);
+
+const value = computed({
+    get() {
+        return props.modelValue;
+    },
+    set(val) {
+        emit('update:modelValue', val);
+        if (props.required && val) {
+                    console.log(val)
+
+            internalError.value = false;
+            hasError.value = false;
+        }
+    }
+});
+
+const handleBlur = (e) => {
+    emit('blur', e);
+    if (props.required && !value.value) {
+        internalError.value = true;
+    }
+}
 </script>
 
 <template>
-    <div 
-        :style="style" 
-        :class="{ 'disabled': props.disabled }" 
-        class="base-input-container flex pointer"
+    <BaseToolTip
+        :placement="'bottom'"
+        :showArror="true"
+        :disabled="!hasError"
     >
-        <input  
-            class="input fullw" 
-            :type="props.type"
-            :placeholder="props.placeholder"
-            :disabled="disabled"
-        />
-
-    </div>
+        <template #title>
+            <div 
+                :style="style" 
+                :class="{ 'disabled': props.disabled, 'is-error': hasError }" 
+                class="base-input-container flex pointer"
+            >
+                <input  
+                    class="input fullw" 
+                    :type="props.type"
+                    :placeholder="props.placeholder"
+                    :disabled="disabled"
+                    :style="inputColor"
+                    v-model="value"
+                    @blur="handleBlur"
+                />
+            </div>
+        </template>
+        <template #content>
+            <span v-if="hasError">{{ errorMessage }}</span>
+        </template>
+    </BaseToolTip>
 </template>
 
 <style scoped>
@@ -59,6 +123,13 @@ const props = defineProps({
     border-color: #009b71;
 }
 
+.base-input-container.is-error {
+    border-color: #ef4444 !important;
+}
+
+.base-input-container.is-error:focus-within {
+    border-color: #ef4444 !important;
+}
 
 .base-input-container input{
     white-space: nowrap;
@@ -68,6 +139,7 @@ const props = defineProps({
     overflow: hidden;
 }
 
+/* ... existing styles ... */
 input::placeholder {
     color: #9ca3af; /* Màu xám nhạt */
     opacity: 1; /* Đảm bảo không bị mờ (do Firefox mặc định làm mờ placeholder) */

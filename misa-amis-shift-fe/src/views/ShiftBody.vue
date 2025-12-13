@@ -2,16 +2,25 @@
 <template>
     <div class="body-list flex flex-column">
         <div class="toolbar-list flex flex-row">
-            <BaseSearchInput
-                :placeholder="'Tìm kiếm'"
-            >
-            </BaseSearchInput>
+            
+            <div class="flex align-center">
+                <!-- Search shift -->
+                <BaseSearchInput
+                    :placeholder="'Tìm kiếm'"
+                    :debounceTime="500"
+                    @search ="(val) => emit('search',val)"
+                >
+                </BaseSearchInput>
+            </div>
 
+            <!-- Select action  -->
             <div v-show="selectedItems.length > 0" class="selected-item-actions flex flex-row align-center">
                 <div style="font-size: 13px; font-weight: 600;" class="selected-count">Đã chọn <span style="font-size: 14px;" class="bold">{{ selectedItems?.length }}</span></div>
                 <div @click="handleUnselect" class="unselected">Bỏ chọn</div>
                 <BaseButton
+                    v-if="hasInactiveItemSelected"
                     type="success"
+                    @click="handleUpdateStatus(false)"
                 >
                     <template #content>
                         <div class="icon16 active-icon green"></div>
@@ -19,7 +28,9 @@
                     </template>
                 </BaseButton>
                 <BaseButton
+                    v-if="hasActiveItemSelected"
                     type="danger-outline"
+                    @click="handleUpdateStatus(true)"
                 >
                     <template #content>
                         <div class="icon16 inactive-icon red"></div>
@@ -29,6 +40,7 @@
 
                 <BaseButton
                     type="danger-outline"
+                    @click="handleDelete()"
                 >
                     <template #content>
                         <div class="icon16 trash-red-icon"></div>
@@ -37,38 +49,88 @@
                 </BaseButton>
             </div>
 
-            <div class="reload-button">
-                <BaseToolTip
-                    :placement="'top'"
+            <!-- Filter box  -->
+            <div class="filter-conditions fullh" v-show="currentFilters.length > 0 && selectedItems.length === 0">
+                <div 
+                    class="filter-item" 
+                    v-for="filterItem in currentFilters"
+                    :key="filterItem.field"
                 >
-                    <template #title>
-                        <BaseButton
-                            type="default"
+                    <div class="lable-filter-value flex flex-row">
+                        <span>{{ getColumnLabel(filterItem) }}</span>
+                        <span style="color: #009B71">{{ getOperatorLabel(filterItem) }}</span>
+                        <span>{{ filterItem.value }}</span>
+                    </div>
+                    <div 
+                        class="icon16 close-icon pointer" 
+                        @click="() => handleClearFilter(filterItem.field)"
                         >
-                            <template #content>
-                                <div class="icon16 reload-icon"></div>
-                            </template>
-                        </BaseButton>
-                    </template>
+                    </div>
+                </div>
+                <div class="delete-all-filter" @click="handleClearAllFilter">Bỏ lọc</div>
+            </div>
 
-                    <template #content>
-                        <span>Lấy lại dữ liệu</span>
-                    </template>
-                </BaseToolTip>
+            <div class="button-right flex flex-row">
+                <!-- Reload button -->
+                <div v-show="selectedItems.length <= 0" class="reload-button">
+                    <BaseToolTip
+                        :placement="'top'"
+                    >
+                        <template #title>
+                            <BaseButton
+                                type="default"
+                                @click="handleRefresh"
+                            >
+                                <template #content>
+                                    <div class="icon16 reload-icon"></div>
+                                </template>
+                            </BaseButton>
+                        </template>
+    
+                        <template #content>
+                            <span>Lấy lại dữ liệu</span>
+                        </template>
+                    </BaseToolTip>
+                </div>
+    
+                <!-- Export button -->
+                <div v-show="selectedItems.length <= 0" class="export-button">
+                    <BaseToolTip
+                        :placement="'top'"
+                    >
+                        <template #title>
+                            <BaseButton
+                                type="default"
+                                @click="handleExportExcel"
+                            >
+                                <template #content>
+                                    <div class="icon16 export-icon"></div>
+                                </template>
+                            </BaseButton>
+                        </template>
+    
+                        <template #content>
+                            <span>Xuất Excel</span>
+                        </template>
+                    </BaseToolTip>
+                </div>
             </div>
 
         </div>
         <div class="content-body flex flex-column fullw flex-1" style="min-height: 0;">
             <div class="table-container fullw flex-1">
+                <!-- Shift Table -->
                 <table class="shif-table">
                     <thead>
                         <tr>
-                            <th style="z-index: 100;" class="sticky-left sticky-top">
-                                <input 
-                                    type="checkbox" 
-                                    :checked="isAllSelected"
-                                    @change="toggleAll"
-                                >
+                            <th style="z-index: 100;" class="sticky-left sticky-top checkbox-col">
+                                <div class="flex align-center fullh">
+                                    <input 
+                                        type="checkbox" 
+                                        :checked="isAllSelected"
+                                        @change="toggleAll"
+                                    >
+                                </div>
                             </th>
                             <th class="sticky-top" v-for="(col) in props.columns" :key="col.field" :ref="el => columnRefs[col.field] = el">
                                 <div class="flex flex-row align-center between">
@@ -76,24 +138,58 @@
                                         :placement="'top'"
                                     >
                                         <template #title>
-                                            {{ col.label }}
+                                            <div 
+                                                class="fullw flex align-center" 
+                                                :class="col.right ? 'flex-end' : ''"
+                                                @click="() => handlePopupSortClick(col.field)"
+                                            >
+                                                {{ col.label }}
+                                                <div v-if="getSortKey(col.field) === 'ASC'" style="margin: 0;" class="icon16 arrow-up-icon"></div>
+                                                <div v-if="getSortKey(col.field) === 'DESC'" style="margin: 0;" class="icon16 arrow-down-icon"></div>
+
+                                            </div>
+
+                                            <!-- Sort popup -->
+                                            
                                         </template>
-    
+                                        
                                         <template #content>
                                             <span>{{ col.label }}</span>
                                         </template>
                                     </BaseToolTip>
+                                    <BaseSortMenu 
+                                        :showPopup="showPopupSort === col.field"
+                                        :parentEl="columnRefs[col.field]"
+                                        :field="col.field"
+                                        :actionKey="getSortKey(col.field)"
+                                        @close="showPopupSort = ''"
+                                        @action-key="handleApplySort"
+
+                                    />
     
-                                    <div v-if="col.filterable" class="th-title-icon flex align-center fullh" @click="() => handleClickFilter(col.field)">
-                                        <div class="icon16 filter-icon" filter-icon></div>
+                                    <div 
+                                        v-if="col.filterable"
+                                        :class="{'th-title-icon': !isFilterActive(col.field) }"
+                                        class="flex align-center fullh"
+                                        @click="() => handleClickFilter(col.field)"
+                                    >
+
+                                        <div class="icon16" :class="[isFilterActive(col.field) ? 'filter-icon-active' : 'filter-icon' ]"></div>
                                     </div>
-    
+
+                                    <!-- Filter popup -->
                                     <BaseFilterPopup
                                         v-if="col.filterable"
                                         :parentEl="columnRefs[col.field]"
                                         :showPopup="showPopupField === col.field"
                                         :title="col.label"
+                                        :type="col.type"
+                                        :options="col.options"
+                                        :field="col.field"
+                                        :currentFilter="getFilter(col.field)"
                                         @close="showPopupField=''"
+                                        @apply-filter="handleApplyFilter"
+                                        @clear="handleClearFilter"
                                     />
                                 </div>
                             </th>
@@ -103,33 +199,37 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(data,index) in props.datas" :key="index">
-                            <td :class="isItemSelected(data.ShiftID) ? 'checked-td' : ''" class="sticky-left">
+                        <tr v-for="(data,index) in props.datas" :key="index" @dblclick="emit('edit', data)">
+                            <td :class="isItemSelected(data.shiftId) ? 'checked-td' : ''" class="sticky-left">
                                 <input 
                                     type="checkbox" 
-                                    :checked="isItemSelected(data.ShiftID)"
-                                    @change="toggleItem(data.ShiftID)"
+                                    :checked="isItemSelected(data.shiftId)"
+                                    @change="toggleItem(data.shiftId)"
                                 >
                             </td>
                             <td 
                                 class="sticky" 
-                                :class="isItemSelected(data.ShiftID) ? 'checked-td' : ''" 
+                                :class="isItemSelected(data.shiftId) ? 'checked-td' : ''" 
                                 v-for="(col ) in props.columns" :key="col.field"
                             >
                                 <slot
-                                    :name="`cell${col.field}`"
-                                    :value="data[col.field]"                                    
+                                    :name="`body-${col.field}`"
+                                    :value="data[col.field]"
+                                    :data="data"
+                                    :index="index"
                                 >
                                     <BaseToolTip
                                         :placement="'bottom-start'"
                                         :showArror="false"
                                     >
                                         <template #title>
-                                            {{ data[col.field] }}
+                                            <div class="fw400 fullw flex align-center" :class="col.right ? 'flex-end' : ''" >
+                                                {{ (data[col.field] || data[col.field] == 0)  ? data[col.field] : "-" }}
+                                            </div>
                                         </template>
 
                                         <template #content>
-                                            <span>{{ data[col.field] }}</span>
+                                            <span>{{  (data[col.field] || data[col.field] == 0) ? data[col.field] : "-" }}</span>
                                         </template>
                                     </BaseToolTip>
                                 </slot>
@@ -140,9 +240,12 @@
                                         :placement="'top'"                                       
                                     >
                                         <template #title>
-                                            <div class="feature-btn">
+                                            <div 
+                                                class="feature-btn"
+                                                @click="emit('edit', data)"
+                                            >
                                                 <div class="icon16 pencil-icon"></div>
-                                            </div>
+                                            </div>                                          
                                         </template>
 
                                         <template #content>
@@ -153,21 +256,21 @@
                                     
                                     <div 
                                         class="feature-btn" 
-                                        @click="handleClickActionBtn(data.ShiftID)"
-                                        :ref="el => actionBtnRefs[data.ShiftID] = el"
+                                        @click="handleClickActionBtn(data.shiftId)"
+                                        :ref="el => actionBtnRefs[data.shiftId] = el"
                                     >
                                         <div class="icon16 more-feature-icon"></div>
                                     </div>
 
                                     <BasePopover
-                                        :parentEl="actionBtnRefs[data.ShiftID]"
-                                        :show="actionBtnId === data.ShiftID"
+                                        :parentEl="actionBtnRefs[data.shiftId]"
+                                        :show="actionBtnId === data.shiftId"
                                         @close="actionBtnId = null"
                                     >
                                         <template #content>
                                             <BaseActionMenu
                                                 :row="data"
-                                                :actions="SHIFT_TABLE_ACTION"
+                                                @action-click="handleMenuActionClick"
                                             >
                                             </BaseActionMenu>
                                         </template>
@@ -178,57 +281,69 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Pagination -->
             <div class="shift-pagination flex flex-row align-center">
+                <!-- Total record -->
                 <div class="total-count flex flex-row align-center">
                     <div class="total-label">Tổng số: </div>
-                    <div class="total">{{ props.datas?.length }}</div>
+                    <div class="total">{{ props?.totalRecord }}</div>
                 </div>
                 <div class="pagination-sticky flex flex-row align-center">
                     <div class="page-size-label">Số dòng/trang</div>
                     <div class="page-size-component">
+                        <!-- Page size select -->
                         <BaseSelectInput
                             :options="PAGE_SIZE_OPTIONS"
                             :style="'width: 80px'"  
-                            :defaultValue="20"
-                                                
+                            :defaultValue="props?.pageSize"
+                            @select="handleChangePageSize"                  
                             >
                         </BaseSelectInput>
                     </div>
-                    <div class="page-info">1 - 17</div>
+                    <div class="page-info">{{ pageInfo }}</div>
+                    <!-- Pagination navigate -->
                     <div class="pagination-btn flex flex-row align-center">
+                        <!-- Move to first page -->
                         <BaseButton
                             :type="'text-neutral'"
-                            :disabled="true"
+                            :disabled="!canMovePrePage"
+                            @click="emit('page-index',1)"
                         >
                             <template #content>
-                                <div class="icon16 step-backward-icon disabled-icon"></div>
+                                <div class="icon16 step-backward-icon" :class="!canMovePrePage ? 'disabled-icon' : ''"></div>
                             </template>
                         </BaseButton>
 
+                        <!-- Move to prev page -->
                         <BaseButton
                             :type="'text-neutral'"
-                            :disabled="true"
+                            :disabled="!canMovePrePage"
+                            @click="handlePrevPage"
                         >
                             <template #content>
-                                <div class="icon16 angle-left-icon disabled-icon"></div>
+                                <div class="icon16 angle-left-icon" :class="!canMovePrePage ? 'disabled-icon' : ''"></div>
                             </template>
                         </BaseButton>
 
+                        <!-- Move to next page -->
                         <BaseButton
                             :type="'text-neutral'"
-                            :disabled="true"
+                            :disabled="!canMoveNextPage"
+                            @click="handleNextPage"
                         >
                             <template #content>
-                                <div class="icon16 angle-right-icon disabled-icon"></div>
+                                <div class="icon16 angle-right-icon" :class="!canMoveNextPage ? 'disabled-icon' : ''"></div>
                             </template>
                         </BaseButton>
 
+                        <!-- Move to last page -->
                         <BaseButton
                             :type="'text-neutral'"
-                            :disabled="true"
+                            :disabled="!canMoveNextPage"
+                            @click="emit('page-index',props.totalPage)"
                         >
                             <template #content>
-                                <div class="icon16 step-forward-icon disabled-icon"></div>
+                                <div class="icon16 step-forward-icon" :class="!canMoveNextPage ? 'disabled-icon' : ''"></div>
                             </template>
                         </BaseButton>
 
@@ -241,16 +356,20 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
+    
+import { computed, reactive, ref, registerRuntimeCompiler, watch } from 'vue';
 import BaseToolTip from '../components/tooltip/BaseToolTip.vue';
 import BaseButton from '../components/button/BaseButton.vue';
 import BaseSearchInput from '../components/input/BaseSearchInput.vue';
 import BaseSelectInput from '../components/input/BaseSelectInput.vue';
-import { PAGE_SIZE_OPTIONS, SHIFT_TABLE_ACTION } from '../constants/common';
 import BaseFilterPopup from '../components/overlay/BaseFilterPopup.vue';
 import BasePopover from '../components/overlay/BasePopover.vue';
 import BaseActionMenu from '../components/menu/BaseActionMenu.vue';
 import ShiftFormModal from './ShiftFormModal.vue';
+import { COLUMN_TYPE, PAGE_SIZE_OPTIONS } from '../constants/common';
+import { formatTimeToHHMM } from '../utils/formatFns';
+import BaseSortMenu from '../components/menu/BaseSortMenu.vue';
+const emit = defineEmits(['page-index','page-size','close', 'update-status', 'request-delete', 'edit', 'duplicate' , 'search', 'refresh','filter','export']);
 
 const props = defineProps({
     datas: {
@@ -260,17 +379,105 @@ const props = defineProps({
     columns: {
         type: Array,
         default: []
-    }
+    },
+    pageIndex: {
+        type:  Number,
+        default: 1
+    },
+    pageSize: {
+        type:  Number,
+        default: 20
+    },
+    totalPage: {
+        type:  Number,
+        default: 0
+    },
+    totalRecord: {
+        type:  Number,
+        default: 0
+    },
 })
 
-
- 
+// Danh sách ca làm việc được check
 const selectedItems = ref([]);
-const columnRefs = reactive({});
+const columnRefs = {};
+
+// Popup filter
 const showPopupField = ref('');
 
-const actionBtnRefs = reactive({});
+//Popup sort
+const showPopupSort = ref('')
+
+const actionBtnRefs = {};
 const actionBtnId = ref(null);
+
+// Lưu trữ filter hiện tại
+const currentFilters = ref([]);
+
+// Lưu trữ sort hiện tại
+const currentSorts = ref([])
+
+const handleDuplicate = (data) => {
+    emit('duplicate', data);
+    actionBtnId.value = null
+    
+}
+
+const handleChangePageSize = (size) => {
+    emit("page-size",size)
+}
+
+const pageInfo = computed(() => {
+    if (props.totalRecord === 0) return "0 - 0";
+    console.log(props.pageSize )
+    const start = (props.pageIndex - 1) * props.pageSize + 1;
+    const end = Math.min(props.pageIndex * props.pageSize, props.totalRecord);
+
+    return `${start} - ${end}`;
+});
+
+const canMovePrePage = computed(() => {
+    return props.pageIndex > 1;
+});
+
+const canMoveNextPage = computed(() => {
+    return props.pageIndex < props.totalPage;
+});
+
+// Watch search value để search
+
+const handleUpdateStatus = (newStatus,shiftId = null) => {
+    // Nếu như có shiftId là đang chọn bằng menu action 
+    if(shiftId){
+        emit('update-status', { ids: [shiftId], status: newStatus });
+    }else{
+        emit('update-status', { ids: [...selectedItems.value], status: newStatus });
+    }
+
+    actionBtnId.value = null // Đóng menu nếu mở
+    selectedItems.value = []; // Bỏ chọn sau khi update
+}
+
+const handleDelete = (shiftId = null) =>{
+    if(shiftId){
+        emit('request-delete', { shiftIds: [shiftId]});
+        selectedItems.value = selectedItems.value.filter(id => id !== shiftId);
+    }else{
+        emit('request-delete', { shiftIds: [...selectedItems.value]});
+        selectedItems.value = [];
+    }
+
+    // Đóng menu nếu mở
+    actionBtnId.value = null
+}
+
+const handleRefresh = () => {
+    emit('refresh');
+}
+
+const handleExportExcel = () => {
+    emit('export');
+}
 
 const handleClickFilter = (field) => {
     showPopupField.value = field;
@@ -293,15 +500,18 @@ const toggleItem = (id) => {
 };
 
 const isAllSelected = computed(() => {
-    return props.datas.length > 0 
-        && selectedItems.value.length === props.datas.length;
+    if (props.datas.length === 0) return false;
+    return props.datas.every(item => selectedItems.value.includes(item.shiftId));
 });
 
 const toggleAll = () => {
     if (isAllSelected.value) {
-        selectedItems.value = [];
+        const currentIds = props.datas.map(item => item.shiftId);
+        selectedItems.value = selectedItems.value.filter(id => !currentIds.includes(id));
     } else {
-        selectedItems.value = props.datas.map(item => item.ShiftID);
+        const currentIds = props.datas.map(item => item.shiftId);
+        const newIds = currentIds.filter(id => !selectedItems.value.includes(id));
+        selectedItems.value = [...selectedItems.value, ...newIds];
     }
 };
 
@@ -309,6 +519,222 @@ const handleUnselect = () =>{
     selectedItems.value = [];
 }
 
+const hasInactiveItemSelected = computed(() => {
+    const selectedRows = props.datas.filter(item => selectedItems.value.includes(item.shiftId));
+    // Hiện nút "Sử dụng" nếu có ít nhất 1 dòng đang Ngừng hoạt động (inactive = true)
+    return selectedRows.some(item => item.inactive === true || item.Inactive === true);
+});
+
+const hasActiveItemSelected = computed(() => {
+    const selectedRows = props.datas.filter(item => selectedItems.value.includes(item.shiftId));
+    // Hiện nút "Ngừng sử dụng" nếu có ít nhất 1 dòng đang Hoạt động (inactive = false)
+    return selectedRows.some(item => !item.inactive && !item.Inactive);
+});
+
+const handleMenuActionClick = (key, data) => {
+    switch (key) {
+
+        case "duplicate":
+            handleDuplicate(data);
+            break;
+
+        case "toggle_inactive":
+            handleUpdateStatus(true,data.shiftId);
+            break;
+
+        case "toggle_active":
+            handleUpdateStatus(false,data.shiftId);
+            break;
+
+        case "delete":
+            handleDelete(data.shiftId);
+            break;
+
+        default:
+            console.warn("Unknown action:", key);
+    }
+};
+
+const handlePrevPage = () => {
+    if (canMovePrePage.value) {
+        emit("page-index", props.pageIndex - 1);
+    }
+};
+
+const handleNextPage = () => {
+    if (canMoveNextPage.value) {
+        emit("page-index", props.pageIndex + 1);
+    }
+    
+};
+
+
+// Filter logic
+
+// Emit filter nếu như currentFilters thay đổi
+watch(currentFilters, (newFilters) => {
+    emit('filter', newFilters);
+},{deep:true})
+
+// Áp dụng filter
+const handleApplyFilter = (newFilter) => {    
+    // Kiểm tra xem đã có filter này chưa
+    const existingFilterIndex = currentFilters.value.findIndex((filter) => filter.field === newFilter.field);
+
+    if(existingFilterIndex !== -1){
+
+        // Nếu như người dùng chọn trống hoặc k trống thì k cần nhập (bỏ qua điều kiện value trống)
+        if(newFilter.operator === 'not_empty' || newFilter.operator === 'empty'){
+            currentFilters.value[existingFilterIndex] = newFilter;
+        }
+
+        // Nếu đã có filter trạng thái thì cập nhập (bỏ qua điều kiện value trống)
+        else if(newFilter.field === 'inactive' && newFilter.operator !== ''){
+            currentFilters.value[existingFilterIndex] = newFilter;
+        }
+
+        // Nếu có filter nhưng k có operator và value thì sẽ xóa filter đó
+        else if(newFilter?.value == null || newFilter?.value === ''  || newFilter?.operator === ''){
+            currentFilters.value.splice(existingFilterIndex,1)
+        }
+        // Đã có filter và có value mới thì cập nhập
+        else{
+        
+            currentFilters.value[existingFilterIndex] = newFilter;
+        }
+
+    }
+    // Nếu như chưa có filter này thì sẽ thêm mới 
+    else {
+        // Nếu như người dùng chọn trống hoặc k trống thì k cần nhập (bỏ qua điều kiện value trống)
+        if(newFilter.operator === 'not_empty' || newFilter.operator === 'empty'){
+            currentFilters.value.push(newFilter);
+        }
+
+        // Nếu chưa có filter trạng thái thì thêm vào (bỏ qua điều kiện value trống)
+        else if(newFilter.field === 'inactive' && newFilter.operator !== ''){
+            currentFilters.value.push(newFilter);
+        }
+        else if(newFilter.operator !== '' && newFilter.value !== ''){
+            currentFilters.value.push(newFilter);
+        }
+    } 
+
+    //Đóng popup filter
+    showPopupField.value = '';
+
+}
+
+// Xóa filter khi nhấn bỏ chọn trong popup
+const handleClearFilter = (field) => {
+    //Lấy vị trí filter cần xóa trong mảng currentFilters
+    const filterToClearIndex = currentFilters.value.findIndex((filter) => filter.field === field);
+    
+    // Nếu như tồn tại thì xóa 
+    if(filterToClearIndex !== -1){
+        currentFilters.value.splice(filterToClearIndex,1)
+    }
+
+    // Đóng popup filter
+    showPopupField.value = '';
+}
+
+// Xóa tất cả filter
+const handleClearAllFilter = () => {
+    currentFilters.value = [] 
+}
+
+// Kiểm tra xem 1 cột đang có filter hay không
+const isFilterActive = (field) => {
+    const filterToClearIndex = currentFilters.value.findIndex((filter) => filter.field === field);
+    
+    // Nếu k có là false
+    if(filterToClearIndex === -1){
+        return false
+    }
+
+    //Nếu có là true
+    return true
+}
+
+// Lấy label hiển thị cho operator (vd: eq -> Bằng)
+const getOperatorLabel = (filterItem) => {
+
+    // Lấy cột
+    const column = props.columns.find((col) => col.field === filterItem.field);
+
+    if(column && column.options){
+        // Lấy option của filter item
+        const option = column.options.find((opt) => opt.value === filterItem.operator)
+        if(option){
+            return option.label;
+        }
+
+        // Nếu k tìm thấy option thì trả về value
+        return filterItem.operator
+    }
+}
+
+// Lấy label hiển thị cho cột (vd: shiftCode -> Mã ca)
+const getColumnLabel = (filterItem) => {
+
+    // Lấy cột của filter item
+    const column = props.columns.find((col) => col.field === filterItem.field);
+
+    // Nếu như k có cột thì trả về field của filter item hiện tại
+    return column ? column.label : filterItem.field;
+}
+
+// Lấy filter dựa theo field
+const getFilter = (field) => {
+    return currentFilters.value.find((filter) => filter.field === field);
+}
+
+// Sort logic 
+
+const handlePopupSortClick = (field) => {
+    showPopupSort.value = field
+}
+
+const handleApplySort = (key,field) => {
+    const currentSortIndex = currentSorts.value.findIndex(sort => sort.fieldName === field);
+    // Nếu như có sort
+    if(currentSortIndex !== -1){
+        
+        // Nếu như k sort thì xóa sort item trong danh sách
+        if(key === 'none'){
+            currentSorts.value.splice(currentSortIndex,1);
+
+            // Đóng sort menu
+            showPopupSort.value = '';
+            return;
+        }
+
+        // Cập nhập key
+        currentSorts.value[currentSortIndex].direction = key
+    }
+    // Nếu chưa có thì thêm mới
+    else {
+        currentSorts.value.push({
+            fieldName: field,
+            direction: key
+        })
+    }
+
+    // Đóng sort menu
+    showPopupSort.value = '';
+}
+
+
+// Lấy sort dựa theo field name
+const getSortKey = (field) => {
+    return currentSorts.value.find(sort => sort.fieldName === field)?.direction;
+}
+
+// Theo dõi currentSorts để emit lên component cha
+watch(currentSorts, (newSorts) => {
+    emit('sort', newSorts);
+},{deep:true})
 
 </script>
 
@@ -334,6 +760,7 @@ const handleUnselect = () =>{
     gap: 8px;
     margin-left: 8px;
     height: 28px;
+    flex-shrink: 0;
 }
 
 .selected-item-actions .unselected{
@@ -347,8 +774,9 @@ const handleUnselect = () =>{
     text-decoration: underline;
 }
 
-.reload-button{
+.button-right{
     margin: auto 0 auto auto;
+    gap: 8px;
 }
 
 .table-container {
@@ -412,10 +840,9 @@ const handleUnselect = () =>{
     max-width: 250px;
     overflow: hidden;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 400;
 
 }
-
 .shif-table .action-buttons{
     justify-content: flex-start;
     padding-left: 8px;
@@ -457,17 +884,21 @@ const handleUnselect = () =>{
 }
 
 .shift-pagination .total{
-        margin-left: 4px;
-    font-weight: 700;
+    margin-left: 4px;
+    font-weight: 500;
     color: #111827;
+    flex-shrink: 0;
+    font-size: 13px;
 }
 
 .shift-pagination .pagination-sticky{
     gap: 16px;
+    flex-shrink: 0;
 }
 
 .pagination-sticky .page-info{
-    font-weight: 700;
+    font-weight: 600;
+    font-size: 13px;
 }
 
 /* Input */
@@ -479,5 +910,46 @@ input[type="checkbox"] {
     cursor: pointer;
     transition: all .2s ease;
     transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Filter conditions */
+
+.filter-conditions{
+    display: flex;
+    align-items: center;
+    row-gap: 4px;
+    flex-wrap: wrap;
+    /* margin-bottom: 8px; */
+    margin-right: 8px;
+    max-height: 56px;
+    overflow-y: auto;
+}
+.filter-item{
+    display: flex;
+    gap: 8px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 4px;
+    position: relative;
+    margin-right: 8px;
+    white-space: normal;
+    align-items: center;
+    background-color: #f3f4f6;
+    max-width: calc(100% - 8px);
+}
+
+.lable-filter-value{
+    gap: 8px;
+}
+
+.delete-all-filter{
+    display: inline-block;
+    color: #f06666;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.delete-all-filter:hover{
+    text-decoration: underline;
 }
 </style>

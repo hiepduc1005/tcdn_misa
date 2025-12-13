@@ -76,6 +76,6 @@ namespace Core.Interfaces.Repositories
         /// <remarks>
         /// Created By: hiepnd - 12/2025
         /// </remarks>
-        PagingResult<T> getDataPaging(int pageIndex, int pageSize, List<FilterItem> filters = null, List<SortItem> sorts = null);
+        PagingResult<T> getDataPaging(int pageIndex, int pageSize, List<FilterItem> filters = null, List<FilterItem> customFilters = null, List<SortItem> sorts = null);
     }
 }

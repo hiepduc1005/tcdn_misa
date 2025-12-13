@@ -3,6 +3,7 @@ using MISA.Core.Interfaces.Services;
 using MISA.Core.Middlewares;
 using MISA.Core.Services;
 using MISA.Infrastructure.Repositories;
+using MISA.Infrastructure.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,10 +16,23 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+
+
 // Config DI
 
 builder.Services.AddScoped<IShiftRepository, ShiftRepository>();
 builder.Services.AddScoped<IShiftService, ShiftService>();
+builder.Services.AddScoped<IExcelExporterService, ClosedXMLExcelExporter>();
 
 var app = builder.Build();
 
@@ -27,6 +41,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors("AllowAll");
 
 app.UseHttpsRedirection();
 

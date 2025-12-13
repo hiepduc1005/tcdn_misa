@@ -2,8 +2,7 @@
 import { defineProps, defineEmits } from 'vue';
 
 const props = defineProps({
-    row: { type: Object, required: true },            // dữ liệu dòng hiện tại
-    actions: { type: Array, default: () => [] }       // danh sách action truyền vào
+    row: { type: Object, required: true }            // dữ liệu dòng hiện tại
 });
 
 const emit = defineEmits(["action-click"]);
@@ -11,6 +10,25 @@ const emit = defineEmits(["action-click"]);
 const handleClick = (action) => {
     emit("action-click", action.key, props.row);
 };
+
+const actions = [
+    {
+        key: "duplicate",
+        label: "Nhân bản",
+        iconClass: "duplicate-icon"
+    },
+    {
+        key: props?.row?.inactive  ? "toggle_active" : "toggle_inactive"  ,
+        label: props?.row?.inactive  ? "Sử dụng" :  "Ngừng sử dụng" , // hoặc Ngừng sử dụng tùy row
+        iconClass: props?.row?.inactive  ?  "active-icon" : "inactive-icon" 
+    },
+    {
+        key: "delete",
+        label: "Xóa",
+        iconClass: "trash-red-icon",
+    }
+]
+
 </script>
 
 <template>

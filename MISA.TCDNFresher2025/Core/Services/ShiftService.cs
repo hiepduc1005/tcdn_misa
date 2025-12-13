@@ -18,11 +18,11 @@ namespace MISA.Core.Services
     /// <remarks>
     /// Created By: hiepnd - 12/2025
     /// </remarks>
-    public class ShiftService : IShiftService
+    public class ShiftService : BaseService<Shift> , IShiftService 
     {
         IShiftRepository _shiftRepository;
 
-        public ShiftService(IShiftRepository shiftRepository)
+        public ShiftService(IShiftRepository shiftRepository, IExcelExporterService excelExporterService) : base(shiftRepository, excelExporterService)
         {
             this._shiftRepository = shiftRepository;
             
@@ -91,13 +91,6 @@ namespace MISA.Core.Services
 
             // Gán id
             shift.ShiftId = Guid.NewGuid();
-
-            // gán số giờ làm việc
-            shift.WorkingTime = (shiftCreateDto.EndShiftTime - shiftCreateDto.BeginShiftTime).TotalHours;
-
-            // Gán số giờ nghỉ
-            shift.BreakingTime = (shiftCreateDto.EndBreakTime - shiftCreateDto.BeginBreakTime).TotalHours;
-
             
             shift.CreatedDate = DateTime.Now;
             shift.CreatedBy = "Admin";
@@ -160,8 +153,9 @@ namespace MISA.Core.Services
             PagingResult<Shift> pagingResult = _shiftRepository.getDataPaging(
                 pagingRequest.PageIndex,
                 pagingRequest.PageSize,
-                pagingRequest.filterItems,
-                pagingRequest.sortItems
+                pagingRequest.FilterItems,
+                pagingRequest.CustomFilters,
+                pagingRequest.SortItems
             );
 
             var shiftResponseList = pagingResult.DataPaging
@@ -284,11 +278,7 @@ namespace MISA.Core.Services
             {
                 errors.Add("EndShiftTime", "Giờ hết ca không được để trống. ");
             }
-            // Giờ hết ca phải lớn hơn giờ vào ca.
-            else if (shift.EndShiftTime <= shift.BeginShiftTime)
-            {
-                errors.Add("EndShiftTime", "Giờ hết ca phải lớn hơn giờ vào ca.");
-            }
+          
 
             // Throw ra exception nếu như có lỗi 
             if (errors.Count > 0)
@@ -305,6 +295,8 @@ namespace MISA.Core.Services
             // Ngày sửa
             shift.ModifiedDate = DateTime.Now;
 
+            shift.CreatedBy = existing.CreatedBy;
+            shift.CreatedDate = existing.CreatedDate;
             // Fake admin
             shift.ModifiedBy = "Admin Modify";
 
@@ -314,6 +306,22 @@ namespace MISA.Core.Services
             ShiftResponseDto shiftResponse = AutoMapperService<Shift, ShiftResponseDto>.Map(res);
             return shiftResponse;
         }
+
+        public void InactiveShifts(List<Guid> shiftIds)
+        {
+            _shiftRepository.InactivateShifts(shiftIds);
+        }
+
+        public void ActiveShifts(List<Guid> shiftIds)
+        {
+            _shiftRepository.ActivateShifts(shiftIds);
+        }
+
+        public void DeleteShifts(List<Guid> shiftIds){
+            _shiftRepository.DeleteShifts(shiftIds);
+        }
+
+       
     }
 
 

@@ -34,6 +34,24 @@ namespace MISA.Infrastructure.Utils
             // Nếu không có attribute thì dùng tên property
         }
 
+
+        /// <summary>
+        /// Lấy tên label của column trong database ứng với một property.
+        /// - Nếu property có gán <see cref="ColumnNameAttribute"/> thì dùng tên trong attribute.
+        /// - Nếu không có attribute thì trả về tên property.
+        /// </summary>
+        /// <param name="property">Property cần lấy tên cột.</param>
+        /// <returns>Tên label column trong DB hoặc tên property nếu không có attribute.</returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
+        public static string GetColumnLabel(PropertyInfo property)
+        {
+            var attr = property.GetCustomAttribute<ColumnNameAttribute>();
+            return attr?.Label ?? property.Name;
+            // Nếu không có Label thì dùng tên field
+        }
+
         public static string GetColumnNameFromFieldName<T>(string fieldName)
         {
             // Lấy PropertyInfo từ tên field
@@ -45,6 +63,30 @@ namespace MISA.Infrastructure.Utils
             return ReflectionHelper.GetColumnName(prop);
         }
 
+        public static string GetColumnLabelFromFieldName<T>(string fieldName)
+        {
+            // Lấy PropertyInfo từ tên field
+            var prop = typeof(T).GetProperty(fieldName);
+            if (prop == null)
+                throw new Exception($"Không tìm thấy property '{fieldName}' trong {typeof(T).Name}");
 
+            // Dùng lại helper lấy tên label của cột
+            return ReflectionHelper.GetColumnLabel(prop);
+        }
+
+        public static string GetTableName<T>()
+        {
+            var tableAttr = typeof(T).GetCustomAttributes(typeof(MISATable), false).FirstOrDefault() as MISATable;
+            return tableAttr != null ? tableAttr.Name : typeof(T).Name.ToLower();
+        }
+
+        public static string GetTableLabel<T>()
+        {
+            var tableAttr = typeof(T).GetCustomAttributes(typeof(MISATable), false).FirstOrDefault() as MISATable;
+
+            // Neu nhu k co label thi de ten class lam label
+            return tableAttr != null ? tableAttr.Label : typeof(T).Name;
+            
+        }
     }
 }

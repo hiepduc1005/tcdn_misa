@@ -1,4 +1,5 @@
-﻿using MISA.Core.Dtos.Common;
+﻿using Core.Entities;
+using MISA.Core.Dtos.Common;
 using MISA.Core.Dtos.Shift;
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace MISA.Core.Interfaces.Services
     /// <remarks>
     /// Created By: hiepnd - 12/2025
     /// </remarks>
-    public interface IShiftService 
+    public interface IShiftService : IBaseService<Shift> 
     {
 
         /// <summary>
@@ -67,5 +68,28 @@ namespace MISA.Core.Interfaces.Services
         /// <param name="shiftCode">Mã ca làm việc cần kiểm tra.</param>
         /// <returns>true nếu tồn tại, false nếu chưa tồn tại.</returns>
         bool IsShiftCodeExists(string shiftCode);
+
+        /// <summary>
+        /// Ngừng sử dụng nhiều ca làm việc.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách ca làm việc cần ngừng sử dụng.</param>
+        /// <returns>void</returns>
+        void InactiveShifts(List<Guid> shiftIds);
+
+        /// <summary>
+        /// Sử dụng nhiều ca làm việc.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách ca làm việc cần Sử dụng.</param>
+        /// <returns>void</returns>
+        void ActiveShifts(List<Guid> shiftIds);
+
+        /// <summary>
+        /// Xóa nhiều ca làm việc.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách ca làm việc cần xóa.</param>
+        /// <returns>void</returns>
+        void DeleteShifts(List<Guid> shiftIds);
+
+
     }
 }

@@ -41,5 +41,81 @@ namespace MISA.Infrastructure.Repositories
 
             return result > 0;
         }
+
+        /// <summary>
+        /// Cập nhật trạng thái inactive = 0 cho danh sách ca làm việc.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách Id của ca làm việc.</param>
+        /// <returns>Số bản ghi được cập nhật.</returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
+        public int ActivateShifts(List<Guid> shiftIds)
+        {
+            if (shiftIds == null || shiftIds.Count == 0)
+                return 0;
+
+            string sql = $"UPDATE shift SET inactive = 0 , modified_date = NOW() , modified_by = 'Admin' WHERE shift_id IN @ShiftIds";
+             
+            var affectedRows = dbConnection.Execute(sql, new { ShiftIds = shiftIds });
+
+            return affectedRows;
+        }
+
+        /// <summary>
+        /// Cập nhật trạng thái inactive = 1 cho danh sách ca làm việc.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách Id của ca làm việc.</param>
+        /// <returns>Số bản ghi được cập nhật.</returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
+        public int InactivateShifts(List<Guid> shiftIds)
+        {
+            if (shiftIds == null || shiftIds.Count == 0)
+                return 0;
+
+            string sql = $"UPDATE shift SET inactive = 1 , modified_date = NOW() , modified_by = 'Admin' WHERE shift_id IN @ShiftIds";
+
+            var affectedRows = dbConnection.Execute(sql, new { ShiftIds = shiftIds });
+
+            return affectedRows;
+        }
+
+
+        public int DeleteShifts(List<Guid> shiftIds)
+        {
+            if (shiftIds == null || shiftIds.Count == 0)
+                return 0;
+
+            string sql = "DELETE FROM shift WHERE shift_id IN @ShiftIds";
+
+            var affectedRows = dbConnection.Execute(sql, new { ShiftIds = shiftIds });
+
+            return affectedRows;
+        }
+
+        public List<Shift> SearchShifts(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                string sqlAll = "SELECT * FROM shift";
+                return dbConnection.Query<Shift>(sqlAll).ToList();
+            }
+            // Chuẩn hóa keyword
+            keyword = $"%{keyword.Trim()}%";
+
+            string sql = @"
+                SELECT *
+                FROM shift
+                WHERE shift_code LIKE @Keyword
+                   OR shift_name LIKE @Keyword
+                   OR description LIKE @Keyword;
+            ";
+
+            var shifts = dbConnection.Query<Shift>(sql, new { Keyword = keyword });
+
+            return shifts.ToList();
+        }
     }
 }

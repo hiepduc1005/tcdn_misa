@@ -188,7 +188,6 @@ const handleCloseInviteBox = () => {
     
     .usercontrolpanel__account{
         margin-left: 16px;
-        border: 1px solid #E0E0E0;  
     }
     .usercontrolpanel__account img{
         width: 100%;

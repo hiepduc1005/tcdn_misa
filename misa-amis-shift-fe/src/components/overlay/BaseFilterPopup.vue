@@ -1,13 +1,15 @@
 <script setup>
-import { nextTick, onMounted, ref, watch } from 'vue';
-import { TEXT_FILTER_OPERATORS } from '../../constants/common';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { COLUMN_TYPE, NUMBER_DATE_FILTER_OPERATORS, TEXT_FILTER_OPERATORS } from '../../constants/common';
 import BaseButton from '../button/BaseButton.vue';
 import BaseInputText from '../input/BaseInputText.vue';
 import BaseSelectInput from '../input/BaseSelectInput.vue';
+import BaseInputDate from '../input/BaseInputDate.vue';
 
+// Emit
+const emit = defineEmits(['close','change','clear','apply-filter']);
 
-const emit = defineEmits(['close']);
-
+// Props
 const props = defineProps({
     title: {
         type: String,
@@ -23,7 +25,18 @@ const props = defineProps({
     },
     type: {
         type: String,
-        default: 'text'   /* text / date / number */
+        default: COLUMN_TYPE.TEXT   /* text / date / number */
+    },
+    options: {
+        type: Array,
+    },
+    field : {
+        type: String,
+        default: ''
+    },
+    currentFilter:{
+        type: Object,
+        default: null
     }
 
 })
@@ -68,11 +81,38 @@ onMounted(() => {
     if (props.showPopup) updatePosition();
 });
 
+
 watch(() => props.showPopup,async  (val) => {
     if (val) {
+        // Cập nhật giá trị từ currentFilter khi mở popup
+        if (props.currentFilter) {
+            operator.value = props.currentFilter.operator;
+            value.value = props.currentFilter.value;
+        } else {
+            // Reset về mặc định nếu không có filter hiện tại
+            value.value = '';
+        }
+
         await nextTick(); 
         updatePosition();
     }
+});
+
+const operator = ref(props.options?.[0]?.value ?? '');
+
+const value = ref('')
+
+const handleChangeOperator = (val) => {
+    operator.value = val
+}
+
+// Nếu như là "Trống" hoặc "Không trống" thì không cần nhập
+const isInputDisabled = computed(() => {
+    if(operator.value === 'empty' || operator.value === 'not_empty'){
+        value.value = '';
+        return true;
+    }
+    return false;
 });
 
 </script>
@@ -99,19 +139,31 @@ watch(() => props.showPopup,async  (val) => {
                 <div class="filter-container flex flex-column">
                     <slot name="body">
                         <BaseSelectInput
-                            :options="TEXT_FILTER_OPERATORS"
+                            :options="props.options"
                             :filterable="true"
                             :default-first-option="true"
-                            :defaultValue="'contains'"
+                            :defaultValue="props.options[0].value"
+                            @select="handleChangeOperator"
                         >
                         </BaseSelectInput>
     
+                        <!-- Nếu như type là select thì chỉ cần hiển thị select k cần input -->
                         <BaseInputText
-                            :type="'text'"
+                            v-if="props.type !== COLUMN_TYPE.DATE && props.type !== COLUMN_TYPE.SELECT"
+                            :type="props.type"
                             :placeholder="'Nhập giá trị lọc'"
+                            v-model="value"
+                            :disabled="isInputDisabled"
                         >
-                        
                         </BaseInputText>
+
+                        <!-- Nếu như là select thì chỉ cần hiển thị select k cần input -->
+                        <BaseInputDate
+                            v-if="props.type === COLUMN_TYPE.DATE && props.type !== COLUMN_TYPE.SELECT"
+                            placeholder="Nhập giá trị lọc"
+                            v-model="value"
+                        >
+                        </BaseInputDate>
                     </slot>
                 </div>
     
@@ -120,6 +172,7 @@ watch(() => props.showPopup,async  (val) => {
                         <div class="condition-buttons-left">
                             <BaseButton
                                 :type="'filled-neutral'"  
+                                @click="emit('clear',props.field)"
                             >
                                 <template #content>
                                     <span>Bỏ lọc</span>
@@ -137,7 +190,12 @@ watch(() => props.showPopup,async  (val) => {
                             </BaseButton>
     
                             <BaseButton
-                                :type="'solid-brand'"  
+                                :type="'solid-brand'"
+                                @click="emit('apply-filter', {
+                                    field: props.field,
+                                    operator: operator,
+                                    value: value
+                                })"  
                             >
                                 <template #content>
                                     <span>Áp dụng</span>

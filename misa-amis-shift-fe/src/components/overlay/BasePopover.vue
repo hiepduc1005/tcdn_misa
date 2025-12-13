@@ -19,7 +19,9 @@ const updatePosition = () => {
     const popoverTop = rect.bottom;
 
     popover.style.right = popoverRight + "px";
-    popover.style.top = popoverTop + "px";
+
+    // Cách element cha  8px
+    popover.style.top = (popoverTop + 8) + "px";
 
 }
 
