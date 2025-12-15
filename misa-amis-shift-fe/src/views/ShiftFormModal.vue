@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, watch, ref, computed, onMounted, onUnmounted } from 'vue';
+import { reactive, watch, ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import BaseButton from '../components/button/BaseButton.vue';
 import BaseInputDate from '../components/input/BaseInputDate.vue';
 import BaseInputText from '../components/input/BaseInputText.vue';
@@ -11,7 +11,7 @@ import WarningModal from '../components/modal/WarningModal.vue';
 import BaseRadio from '../components/input/BaseRadio.vue';
 import { SHIFT_MODAL_TYPE } from '../constants/common';
 import ShiftAPI from '../apis/components/shift/ShiftAPI';
-import { roundNumber } from '../utils/formatFns';
+import { roundNumber, formatTimeToHHMM } from '../utils/formatFns';
 import InfoModal from '../components/modal/InfoModal.vue';
 import { isEqual } from 'lodash';
 
@@ -69,7 +69,7 @@ const cloneForm = ref({ ...formState });
 watch(formState,(newVal) => {
     // Nếu như đã thay đổi rồi thì thôi không cần so sanh nữa 
     if(!isChanged.value){
-        isChanged.value = isEqual(newVal,cloneForm.value)
+        isChanged.value = !isEqual(newVal, cloneForm.value);
     }
 },{deep:true})
 
@@ -98,8 +98,10 @@ const calculateDiffHours = (start, end) => {
     
     let minutes1 = h1 * 60 + m1;
     let minutes2 = h2 * 60 + m2;
-    
+
     let diff = minutes2 - minutes1;
+
+    // Nếu diff bé hơn 0 thì có nghĩa là qua ngày hôm sau
     if (diff < 0) diff += 24 * 60; // Xử lý qua đêm
     
     return parseFloat((diff / 60).toFixed(10)); // Trả về số thực
@@ -136,6 +138,12 @@ watch(
     }
 );
 
+/**
+ * Định dạng số giờ làm việc để hiện thị lên form
+ *
+ * @author hiepnd
+ * @returns {number} Số giờ sau khi được làm tròn.
+ */
 const workingTimeDisplay = computed(() => {
     if(formState.workingTime === 0) return 0;
     const roundedValue = roundNumber(formState.workingTime);
@@ -145,12 +153,23 @@ const workingTimeDisplay = computed(() => {
     return roundedValue;
 })
 
+/**
+ * Định dạng số giờ nghỉ để hiện thị lên form
+ *
+ * @author hiepnd
+ * @returns {number} Số giờ sau khi được làm tròn.
+ */
 const breakingTimeDisplay = computed(() => {
     if(formState.breakingTime === 0) return 0;
 
     return roundNumber(formState.breakingTime)
 })
 
+/**
+ * Màu đỏ nếu như giờ làm việc âm
+ *
+ * @author hiepnd
+ */
 const workingTimeInputStyle = computed(() => {
     let baseStyle = '';
     if (formState.workingTime < 0) {
@@ -158,6 +177,7 @@ const workingTimeInputStyle = computed(() => {
     }
     return baseStyle;
 });
+
 
 // Reset form khi đóng/mở modal
 watch(() => props.showModal, (val) => {
@@ -169,10 +189,10 @@ watch(() => props.showModal, (val) => {
                     ...props.data,
                     shiftCode: '', // Đảm bảo mã ca trống
                     shiftName: props.data.shiftName || '',
-                    beginShiftTime: props.data.beginShiftTime || '',
-                    endShiftTime: props.data.endShiftTime || '',
-                    beginBreakTime: props.data.beginBreakTime || '',
-                    endBreakTime: props.data.endBreakTime || '',
+                    beginShiftTime: formatTimeToHHMM(props.data.beginShiftTime) || '',
+                    endShiftTime: formatTimeToHHMM(props.data.endShiftTime) || '',
+                    beginBreakTime: formatTimeToHHMM(props.data.beginBreakTime) || '',
+                    endBreakTime: formatTimeToHHMM(props.data.endBreakTime) || '',
                     description: props.data.description || '',
                     inactive: false // Mặc định active khi nhân bản
                 });
@@ -195,24 +215,32 @@ watch(() => props.showModal, (val) => {
             // Update mode: Map props.data to formState
             Object.assign(formState, {
                 ...props.data,
-                // Đảm bảo các trường thời gian không bị null/undefined
-                beginBreakTime: props.data.beginBreakTime || '',
-                endBreakTime: props.data.endBreakTime || '',
+                // Đảm bảo các trường thời gian không bị null/undefined và đúng định dạng
+                beginShiftTime: formatTimeToHHMM(props.data.beginShiftTime) || '',
+                endShiftTime: formatTimeToHHMM(props.data.endShiftTime) || '',
+                beginBreakTime: formatTimeToHHMM(props.data.beginBreakTime) || '',
+                endBreakTime: formatTimeToHHMM(props.data.endBreakTime) || '',
                 description: props.data.description || ''
             });
 
         }
         
-        // Reset lại clone khi mở modal
-        cloneForm.value = { ...formState };                                                                   
-        // Reset trạng thái thay đổi                                                                          
-        isChanged.value = false;
-
         // Reset lỗi khi mở modal
         Object.keys(formErrors).forEach(key => formErrors[key] = false);
+
+        // Reset lại clone khi mở modal sau khi DOM và các watcher khác đã cập nhật
+        nextTick(() => {
+            cloneForm.value = JSON.parse(JSON.stringify(formState));
+            isChanged.value = false;
+        });
     }
 });
 
+/**
+ * Validate số giờ nghỉ dựa trên giờ bắt đầu nghỉ và kết thúc nghỉ
+ *
+ * @author hiepnd
+ */
 const validateBreakTime = () => {
     // Nếu không nhập giờ nghỉ thì không cần check
     if (!formState.beginBreakTime) return true;
@@ -242,7 +270,11 @@ const validateBreakTime = () => {
     return true;
 }
 
-// Hàm kiểm tra tất cả các trường bắt buộc
+/**
+ * Hàm kiểm tra tất cả các trường bắt buộc
+
+ * @author hiepnd
+ */
 const validateForm = () => {
     let isValid = true;
     let firstErrorMessage = ""; // Chỉ lưu thông báo lỗi đầu tiên
@@ -278,7 +310,11 @@ const validateForm = () => {
     return isValid;
 };
 
-
+/**
+ * Hàm dùng để lưu ca làm việc
+ *
+ * @author hiepnd
+ */
 const handleSave = async () => {
     try {
         // 1. Kiểm tra các trường bắt buộc trước
@@ -325,13 +361,22 @@ const handleSave = async () => {
 
 }
 
+/**
+ * Hàm dùng để lưu ca làm việc và mở modal thêm ca làm việc mới 
+ *
+ * @author hiepnd
+ */
 const handleSaveAndCreate = async () => {
     await handleSave();
     // handleclo
     props.handleShowFormModal()
 }
 
-// Khi người dùng đóng modal thêm/sửa
+/**
+ * Hàm dùng để đóng modal
+ *
+ * @author hiepnd
+ */
 const handleCloseModal = () => {
     // Nếu như form đã thay dổi thì mở modal cảnh báo người dùng
     if(isChanged.value){
@@ -367,10 +412,20 @@ const handleKeydown = async (e) => {
     }
 }
 
+/**
+ * Thêm sự kiện cho bàn phím khi component mounted
+ *
+ * @author hiepnd
+ */
 onMounted(() => {
     window.addEventListener('keydown', handleKeydown);
 })
 
+/**
+ * Xóa sự kiện bàn phím khi component unmounted để tránh memory leak
+ *
+ * @author hiepnd
+ */
 onUnmounted(() => {
     window.removeEventListener('keydown', handleKeydown);
 })

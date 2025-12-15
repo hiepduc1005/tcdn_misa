@@ -6,7 +6,7 @@ import ShiftFormModal from './ShiftFormModal.vue';
 import { COLUMN_TYPE, NUMBER_DATE_FILTER_OPERATORS, SHIFT_MODAL_TYPE, TEXT_FILTER_OPERATORS } from '../constants/common';
 import ShiftAPI from '../apis/components/shift/ShiftAPI';
 import { formatDate } from '../utils/formatDateFns';
-import { camelToPascalCase, formatTimeToHHMM } from '../utils/formatFns';
+import { camelToPascalCase, formatTimeToHHMM, roundNumber } from '../utils/formatFns';
 import BaseToolTip from '../components/tooltip/BaseToolTip.vue';
 import BaseModal from '../components/modal/BaseModal.vue';
 import { ElMessage } from 'element-plus';
@@ -25,18 +25,25 @@ const pagingResult = reactive({
   totalPage: 0,
 });
 
+const isLoading = ref(false);
+
 const loadDataPagingShift = async () => {
-    
-    const response = await ShiftAPI.paging(pagingState);
-    if(response.errors && response.statusCode >= 400){
-        console.error("loadDataPagingShift :" , response.errors);
-        return;
+    isLoading.value = true;
+    try {
+        const response = await ShiftAPI.paging(pagingState);
+        if(response.errors && response.statusCode >= 400){
+            console.error("loadDataPagingShift :" , response.errors);
+            return;
+        }
+
+        pagingResult.data = response?.data.data?.dataPaging;
+        pagingResult.totalPage = response?.data.data?.totalPages;
+        pagingResult.totalRecord = response?.data.data?.totalRecords;
+    } catch (error) {
+        console.error("Error loading data:", error);
+    } finally {
+        isLoading.value = false;
     }
-
-    pagingResult.data = response?.data.data?.dataPaging;
-    pagingResult.totalPage = response?.data.data?.totalPages;
-    pagingResult.totalRecord = response?.data.data?.totalRecords;
-
 }
 
 const handleInactiveAll = async (shiftIds) => {
@@ -361,6 +368,7 @@ const handleExportExcel = async () => {
                 :pageSize="pagingState.pageSize"
                 :totalPage="pagingResult.totalPage"
                 :totalRecord="pagingResult.totalRecord"
+                :isLoading="isLoading"
                 @update-status="handleUpdateStatus"
                 @request-delete="handleRequestDelete"
                 @edit="handleEdit"
@@ -373,6 +381,34 @@ const handleExportExcel = async () => {
                 @sort="handleSortChange"
                 @export="handleExportExcel"
             >
+                <template #body-workingTime="{ value }">
+                    <BaseToolTip :placement="'bottom-start'" :showArror="false">
+                        <template #title>
+                            <span :style="value < 0 ? 'color: red;' : ''">
+                                {{ value < 0 ? `(${Math.abs(roundNumber(value))})` : roundNumber(value) }}
+                            </span>
+                        </template>
+                        <template #content>
+                            <span :style="value < 0 ? 'color: red;' : ''">
+                                {{ value < 0 ? `(${Math.abs(roundNumber(value))})` : roundNumber(value) }}
+                            </span>
+                        </template>
+                    </BaseToolTip>
+                </template>
+                <template #body-breakingTime="{ value }">
+                    <BaseToolTip :placement="'bottom-start'" :showArror="false">
+                        <template #title>
+                            <span :style="value < 0 ? 'color: red;' : ''">
+                                {{ value < 0 ? `(${Math.abs(roundNumber(value))})` : roundNumber(value) }}
+                            </span>
+                        </template>
+                        <template #content>
+                             <span :style="value < 0 ? 'color: red;' : ''">
+                                {{ value < 0 ? `(${Math.abs(roundNumber(value))})` : roundNumber(value) }}
+                            </span>
+                        </template>
+                    </BaseToolTip>
+                </template>
                 <template #body-inactive="{ value }">
                     <div class="flex flex-row align-center" :class="value ? 'inactive' : 'active'">
                         <span>{{ value ? 'Ngừng sử dụng' : 'Đang sử dụng' }}</span>

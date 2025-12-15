@@ -1,4 +1,5 @@
 import { unref } from "vue"
+import { round } from "lodash"
 
 /**
  * Chuyển một đối tượng Proxy (reactive/ref của Vue)
@@ -17,7 +18,7 @@ export const convertToPlainObject = (proxyObj) => {
 }
 
 export function roundNumber(n) {
-    return Math.round(n);
+    return round(n, 1); // Làm tròn 1 chữ số thập phân
 }
 
 /**

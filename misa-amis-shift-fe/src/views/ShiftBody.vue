@@ -199,7 +199,15 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(data,index) in props.datas" :key="index" @dblclick="emit('edit', data)">
+                        <!-- Skeleton Loading Rows -->
+                        <template v-if="props.isLoading">
+                            <SkeletonTableRow
+                                v-for="n in (props.pageSize || 10)"
+                                :key="`skeleton-${n}`"
+                                :columns="props.columns"
+                            />
+                        </template>
+                        <tr v-else v-for="(data,index) in props.datas" :key="index" @dblclick="emit('edit', data)">
                             <td :class="isItemSelected(data.shiftId) ? 'checked-td' : ''" class="sticky-left">
                                 <input 
                                     type="checkbox" 
@@ -366,6 +374,7 @@ import BaseFilterPopup from '../components/overlay/BaseFilterPopup.vue';
 import BasePopover from '../components/overlay/BasePopover.vue';
 import BaseActionMenu from '../components/menu/BaseActionMenu.vue';
 import ShiftFormModal from './ShiftFormModal.vue';
+import SkeletonTableRow from '../components/skeleton/SkeletonTableRow.vue';
 import { COLUMN_TYPE, PAGE_SIZE_OPTIONS } from '../constants/common';
 import { formatTimeToHHMM } from '../utils/formatFns';
 import BaseSortMenu from '../components/menu/BaseSortMenu.vue';
@@ -396,6 +405,10 @@ const props = defineProps({
         type:  Number,
         default: 0
     },
+    isLoading: {
+        type: Boolean,
+        default: false
+    }
 })
 
 // Danh sách ca làm việc được check
@@ -417,16 +430,31 @@ const currentFilters = ref([]);
 // Lưu trữ sort hiện tại
 const currentSorts = ref([])
 
+/**
+ * Hàm emit sự kiện duplicate và đóng action menu lên component cha
+ *
+ * @author hiepnd
+ */
 const handleDuplicate = (data) => {
     emit('duplicate', data);
     actionBtnId.value = null
     
 }
 
+/**
+ * Hàm emit sự kiện page-size để thay đổi số bản ghi/trang lên component cha
+ *
+ * @author hiepnd
+ */
 const handleChangePageSize = (size) => {
     emit("page-size",size)
 }
 
+/**
+ * Định dạng cho phần page info vd: 21 - 40
+ *
+ * @author hiepnd
+ */
 const pageInfo = computed(() => {
     if (props.totalRecord === 0) return "0 - 0";
     console.log(props.pageSize )
@@ -436,16 +464,30 @@ const pageInfo = computed(() => {
     return `${start} - ${end}`;
 });
 
+/**
+ * Biến kiểm tra nếu như có thể lùi page xuống 
+ *
+ * @author hiepnd
+ */
 const canMovePrePage = computed(() => {
     return props.pageIndex > 1;
 });
 
+/**
+ * Biến kiểm tra nếu như page có thể tiến lên
+ *
+ * @author hiepnd
+ */
 const canMoveNextPage = computed(() => {
     return props.pageIndex < props.totalPage;
 });
 
-// Watch search value để search
 
+/**
+ * Hàm emit update-status lên component cha để update status của ca làm việc theo danh sách id
+ *
+ * @author hiepnd
+ */
 const handleUpdateStatus = (newStatus,shiftId = null) => {
     // Nếu như có shiftId là đang chọn bằng menu action 
     if(shiftId){
@@ -458,6 +500,11 @@ const handleUpdateStatus = (newStatus,shiftId = null) => {
     selectedItems.value = []; // Bỏ chọn sau khi update
 }
 
+/**
+ * Hàm emit request-delete lên component cha để xóa ca làm việc theo danh sách id
+ *
+ * @author hiepnd
+ */
 const handleDelete = (shiftId = null) =>{
     if(shiftId){
         emit('request-delete', { shiftIds: [shiftId]});
@@ -471,26 +518,56 @@ const handleDelete = (shiftId = null) =>{
     actionBtnId.value = null
 }
 
+/**
+ * Hàm emit refresh lên component cha để refresh theo danh sách ca làm việc
+ *
+ * @author hiepnd
+ */
 const handleRefresh = () => {
     emit('refresh');
 }
 
+/**
+ * Hàm emit export lên component cha để export theo danh sách ca làm việc hiện tại
+ *
+ * @author hiepnd
+ */
 const handleExportExcel = () => {
     emit('export');
 }
 
+/**
+ * Hàm để mở popup filter cho cột theo field 
+ *
+ * @author hiepnd
+ */
 const handleClickFilter = (field) => {
     showPopupField.value = field;
 }
 
+/**
+ * Hàm để mở popup menu action ca làm việc theo id
+ *
+ * @author hiepnd
+ */
 const handleClickActionBtn = (id) => {
     actionBtnId.value = id;
 }
 
+/**
+ * Hàm kiểm tra nếu id truyền vào đã được check
+ *
+ * @author hiepnd
+ */
 const isItemSelected = (id) => {
     return selectedItems.value.includes(id);
 };
 
+/**
+ * Hàm để check và uncheck row theo id ca làm việc
+ *
+ * @author hiepnd
+ */
 const toggleItem = (id) => {
     if (isItemSelected(id)) {
         selectedItems.value = selectedItems.value.filter(item => item !== id);
@@ -499,11 +576,21 @@ const toggleItem = (id) => {
     }
 };
 
+/**
+ * Biến để kiểm tra xem tất cả danh sách trong trang hiện tại đã được check hay chưa
+ *
+ * @author hiepnd
+ */
 const isAllSelected = computed(() => {
     if (props.datas.length === 0) return false;
     return props.datas.every(item => selectedItems.value.includes(item.shiftId));
 });
 
+/**
+ * Hàm để check và uncheck tất cả ca làm việc trong trang hiện tại
+ *
+ * @author hiepnd
+ */
 const toggleAll = () => {
     if (isAllSelected.value) {
         const currentIds = props.datas.map(item => item.shiftId);
@@ -515,22 +602,46 @@ const toggleAll = () => {
     }
 };
 
+/**
+ * Hàm để uncheck tất cả ca làm việc trong trang hiện tại
+ *
+ * @author hiepnd
+ */
 const handleUnselect = () =>{
     selectedItems.value = [];
 }
 
+/**
+ * Biến để kiểm tra xem trong danh sách ca làm việc đã check 
+ * có ca làm việc nào có inactive = true (Ngừng sử dụng)
+ *
+ * @author hiepnd
+ */
 const hasInactiveItemSelected = computed(() => {
     const selectedRows = props.datas.filter(item => selectedItems.value.includes(item.shiftId));
     // Hiện nút "Sử dụng" nếu có ít nhất 1 dòng đang Ngừng hoạt động (inactive = true)
     return selectedRows.some(item => item.inactive === true || item.Inactive === true);
 });
 
+/**
+ * Biến để kiểm tra xem trong danh sách ca làm việc đã check 
+ * có ca làm việc nào có inactive = false (Đang sử dụng)
+ *
+ * @author hiepnd
+ */
 const hasActiveItemSelected = computed(() => {
     const selectedRows = props.datas.filter(item => selectedItems.value.includes(item.shiftId));
     // Hiện nút "Ngừng sử dụng" nếu có ít nhất 1 dòng đang Hoạt động (inactive = false)
     return selectedRows.some(item => !item.inactive && !item.Inactive);
 });
 
+/**
+ * Hàm để emit các sự kiện của menu action bao gồm
+ * duplicate (Nhân bản), toggle_inactive (Ngừng sử dụng)
+ * toggle_active (Sử dụng), delete (Xóa)
+ *
+ * @author hiepnd
+ */
 const handleMenuActionClick = (key, data) => {
     switch (key) {
 
@@ -555,12 +666,22 @@ const handleMenuActionClick = (key, data) => {
     }
 };
 
+/**
+ * Hàm để lùi page đi 1 so với page hiện tại 
+ *
+ * @author hiepnd
+ */
 const handlePrevPage = () => {
     if (canMovePrePage.value) {
         emit("page-index", props.pageIndex - 1);
     }
 };
 
+/**
+ * Hàm để tăng page thêm 1 so với page hiện tại 
+ *
+ * @author hiepnd
+ */
 const handleNextPage = () => {
     if (canMoveNextPage.value) {
         emit("page-index", props.pageIndex + 1);
