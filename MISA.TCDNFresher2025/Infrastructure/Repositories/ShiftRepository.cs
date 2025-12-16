@@ -83,6 +83,16 @@ namespace MISA.Infrastructure.Repositories
         }
 
 
+        /// <summary>
+        /// Xóa nhiều ca làm việc theo danh sách Id.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách Id của các ca làm việc cần xóa.</param>
+        /// <returns>
+        /// Số lượng bản ghi bị ảnh hưởng (số ca làm việc đã bị xóa).
+        /// </returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
         public int DeleteShifts(List<Guid> shiftIds)
         {
             if (shiftIds == null || shiftIds.Count == 0)
@@ -95,6 +105,19 @@ namespace MISA.Infrastructure.Repositories
             return affectedRows;
         }
 
+        /// <summary>
+        /// Tìm kiếm danh sách ca làm việc theo từ khóa.
+        /// </summary>
+        /// <param name="keyword">
+        /// Từ khóa tìm kiếm.
+        /// Áp dụng tìm kiếm theo mã ca, tên ca hoặc mô tả.
+        /// </param>
+        /// <returns>
+        /// Danh sách ca làm việc thỏa mãn điều kiện tìm kiếm.
+        /// </returns>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
         public List<Shift> SearchShifts(string keyword)
         {
             if (string.IsNullOrWhiteSpace(keyword))

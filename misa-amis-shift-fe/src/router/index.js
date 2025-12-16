@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ShiftView from '../views/ShiftView.vue'
+import ShiftView from '../views/Shift/ShiftView.vue'
 import ComingSoon from '../views/ComingSoon/ComingSoon.vue' // Import ComingSoon component
 
 const router = createRouter({

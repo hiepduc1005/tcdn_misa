@@ -16,6 +16,10 @@ namespace MISA.Core.MISAAtribute
         /// </summary>
         public string Name { get; set; }
 
+
+        /// <summary>
+        /// Tên bảng được hiển thị trên UI
+        /// </summary>
         public string Label { get; set; }
 
         public MISATable(string name)

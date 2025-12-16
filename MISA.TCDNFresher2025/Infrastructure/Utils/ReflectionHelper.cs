@@ -52,6 +52,15 @@ namespace MISA.Infrastructure.Utils
             // Nếu không có Label thì dùng tên field
         }
 
+        /// <summary>
+        /// Lấy tên cột trong database tương ứng với tên field (property) của entity.
+        /// </summary>
+        /// <typeparam name="T">Kiểu entity.</typeparam>
+        /// <param name="fieldName">Tên property của entity.</param>
+        /// <returns>Tên cột trong database.</returns>
+        /// <exception cref="Exception">
+        /// Ném ra exception nếu không tìm thấy property tương ứng trong entity.
+        /// </exception>
         public static string GetColumnNameFromFieldName<T>(string fieldName)
         {
             // Lấy PropertyInfo từ tên field
@@ -63,6 +72,15 @@ namespace MISA.Infrastructure.Utils
             return ReflectionHelper.GetColumnName(prop);
         }
 
+        /// <summary>
+        /// Lấy label hiển thị của cột tương ứng với tên field (property) của entity.
+        /// </summary>
+        /// <typeparam name="T">Kiểu entity.</typeparam>
+        /// <param name="fieldName">Tên property của entity.</param>
+        /// <returns>Label hiển thị của cột.</returns>
+        /// <exception cref="Exception">
+        /// Ném ra exception nếu không tìm thấy property tương ứng trong entity.
+        /// </exception>
         public static string GetColumnLabelFromFieldName<T>(string fieldName)
         {
             // Lấy PropertyInfo từ tên field
@@ -74,12 +92,26 @@ namespace MISA.Infrastructure.Utils
             return ReflectionHelper.GetColumnLabel(prop);
         }
 
+        /// <summary>
+        /// Lấy tên bảng trong database của entity.
+        /// Ưu tiên lấy từ attribute <see cref="MISATable"/>,
+        /// nếu không có thì sử dụng tên class (chuyển về chữ thường).
+        /// </summary>
+        /// <typeparam name="T">Kiểu entity.</typeparam>
+        /// <returns>Tên bảng trong database.</returns>
         public static string GetTableName<T>()
         {
             var tableAttr = typeof(T).GetCustomAttributes(typeof(MISATable), false).FirstOrDefault() as MISATable;
             return tableAttr != null ? tableAttr.Name : typeof(T).Name.ToLower();
         }
 
+        /// <summary>
+        /// Lấy label hiển thị của bảng.
+        /// Ưu tiên lấy từ attribute <see cref="MISATable"/>,
+        /// nếu không có thì sử dụng tên class làm label.
+        /// </summary>
+        /// <typeparam name="T">Kiểu entity.</typeparam>
+        /// <returns>Label hiển thị của bảng.</returns>
         public static string GetTableLabel<T>()
         {
             var tableAttr = typeof(T).GetCustomAttributes(typeof(MISATable), false).FirstOrDefault() as MISATable;

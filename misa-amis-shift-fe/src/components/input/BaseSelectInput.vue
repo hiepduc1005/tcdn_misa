@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 
 const props = defineProps({
@@ -30,6 +30,10 @@ const props = defineProps({
     defaultValue: {
         type: [String,Number],
         default: ''
+    },
+    allowCreate: {
+        type: Boolean,
+        default: false
     }
 })
 
@@ -50,6 +54,7 @@ const handleSelect = (val) => {
         :default-first-option="defaultFirstOption"
         :filterable="filterable"
         :size="props.size ? props.size : ''"
+        allow-create
         @change="handleSelect"
     >
         <el-option

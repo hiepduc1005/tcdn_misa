@@ -286,11 +286,7 @@ namespace MISA.Core.Services
                 throw new MISAValidateException(errors);
             }
 
-            // gán số giờ làm việc
-            shift.WorkingTime = (shiftUpdateDto.EndShiftTime - shiftUpdateDto.BeginShiftTime).TotalHours;
-
-            // Gán số giờ nghỉ
-            shift.BreakingTime = (shiftUpdateDto.EndBreakTime - shiftUpdateDto.BeginBreakTime).TotalHours;
+           
 
             // Ngày sửa
             shift.ModifiedDate = DateTime.Now;
@@ -307,16 +303,37 @@ namespace MISA.Core.Services
             return shiftResponse;
         }
 
+        /// <summary>
+        /// Ngừng sử dụng các ca làm việc theo danh sách Id.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách Id của các ca làm việc cần ngừng sử dụng.</param>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
         public void InactiveShifts(List<Guid> shiftIds)
         {
             _shiftRepository.InactivateShifts(shiftIds);
         }
 
+        /// <summary>
+        /// Kích hoạt (sử dụng lại) các ca làm việc theo danh sách Id.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách Id của các ca làm việc cần kích hoạt.</param>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
         public void ActiveShifts(List<Guid> shiftIds)
         {
             _shiftRepository.ActivateShifts(shiftIds);
         }
 
+        /// <summary>
+        /// Xóa các ca làm việc theo danh sách Id.
+        /// </summary>
+        /// <param name="shiftIds">Danh sách Id của các ca làm việc cần xóa.</param>
+        /// <remarks>
+        /// Created By: hiepnd - 12/2025
+        /// </remarks>
         public void DeleteShifts(List<Guid> shiftIds){
             _shiftRepository.DeleteShifts(shiftIds);
         }

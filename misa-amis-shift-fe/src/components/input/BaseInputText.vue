@@ -56,8 +56,6 @@ const value = computed({
     set(val) {
         emit('update:modelValue', val);
         if (props.required && val) {
-                    console.log(val)
-
             internalError.value = false;
             hasError.value = false;
         }

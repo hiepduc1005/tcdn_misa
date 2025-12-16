@@ -9,8 +9,23 @@ using System.Text;
 
 namespace MISA.Infrastructure.Utils
 {
+    /// <summary>
+    /// Lớp triển khai chức năng xuất dữ liệu ra file Excel
+    /// sử dụng thư viện ClosedXML.
+    /// </summary>
+    /// <remarks>
+    /// Created By: hiepnd - 12/2025
+    /// </remarks>
     public class ClosedXMLExcelExporter : IExcelExporterService
     {
+        /// <summary>
+        /// Xuất danh sách entity ra file Excel.
+        /// </summary>
+        /// <typeparam name="T">Kiểu entity cần xuất dữ liệu.</typeparam>
+        /// <param name="entities">Danh sách dữ liệu cần xuất.</param>
+        /// <returns>
+        /// Mảng byte đại diện cho file Excel (.xlsx).
+        /// </returns>
         public byte[] ExportExcel<T>(List<T> entities)
         {
             // Lấy các property mà không có MISAExportIgnore

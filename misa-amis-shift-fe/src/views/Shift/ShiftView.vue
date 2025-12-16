@@ -1,17 +1,28 @@
 <script setup>
 import { reactive, ref, watch } from 'vue';
-import BaseButton from '../components/button/BaseButton.vue';
+import BaseButton from '../../components/button/BaseButton.vue';
 import ShiftBody from './ShiftBody.vue';
 import ShiftFormModal from './ShiftFormModal.vue';
-import { COLUMN_TYPE, NUMBER_DATE_FILTER_OPERATORS, SHIFT_MODAL_TYPE, TEXT_FILTER_OPERATORS } from '../constants/common';
-import ShiftAPI from '../apis/components/shift/ShiftAPI';
-import { formatDate } from '../utils/formatDateFns';
-import { camelToPascalCase, formatTimeToHHMM, roundNumber } from '../utils/formatFns';
-import BaseToolTip from '../components/tooltip/BaseToolTip.vue';
-import BaseModal from '../components/modal/BaseModal.vue';
+import { COLUMN_TYPE, NUMBER_DATE_FILTER_OPERATORS, SHIFT_MODAL_TYPE, TEXT_FILTER_OPERATORS } from '../../constants/common';
+import ShiftAPI from '../../apis/components/shift/ShiftAPI';
+import { formatDate } from '../../utils/formatDateFns';
+import { camelToPascalCase, formatTimeToHHMM, roundNumber } from '../../utils/formatFns';
+import BaseToolTip from '../../components/tooltip/BaseToolTip.vue';
+import BaseModal from '../../components/modal/BaseModal.vue';
 import { ElMessage } from 'element-plus';
 
-
+/**
+ * Trạng thái paging dùng để gửi lên backend khi gọi API paging
+ * Bao gồm: filter, sort, pageSize, pageIndex
+ *
+ * - filterItems   : Filter theo từng cột
+ * - customFilters : Search
+ * - sortItems     : Danh sách sắp xếp
+ * - pageSize      : Số bản ghi trên 1 trang
+ * - pageIndex     : Trang hiện tại (bắt đầu từ 1)
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const pagingState = reactive({
   filterItems: [],
   customFilters: [],
@@ -19,18 +30,43 @@ const pagingState = reactive({
   pageSize: 20,
   pageIndex: 1
 });
+
+/**
+ * Kết quả trả về sau khi gọi API paging
+ *
+ * - data         : Danh sách bản ghi của trang hiện tại
+ * - totalRecord : Tổng số bản ghi
+ * - totalPage   : Tổng số trang
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const pagingResult = reactive({
   data: [],
   totalRecord: 0,
   totalPage: 0,
 });
 
+// Biến loading
 const isLoading = ref(false);
 
+/**
+ * Hàm tải dữ liệu ca làm việc (Shift) có phân trang từ server.
+ * - Gọi API paging với trạng thái phân trang hiện tại
+ * - Cập nhật danh sách dữ liệu, tổng số bản ghi và tổng số trang
+ * - Quản lý trạng thái loading trong quá trình gọi API
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const loadDataPagingShift = async () => {
+    // Bật trạng thái loading khi bắt đầu gọi API
     isLoading.value = true;
+
     try {
+
+        // Gọi API lấy dữ liệu phân trang
         const response = await ShiftAPI.paging(pagingState);
+
+        // Kiểm tra lỗi trả về từ backend
         if(response.errors && response.statusCode >= 400){
             console.error("loadDataPagingShift :" , response.errors);
             return;
@@ -40,27 +76,60 @@ const loadDataPagingShift = async () => {
         pagingResult.totalPage = response?.data.data?.totalPages;
         pagingResult.totalRecord = response?.data.data?.totalRecords;
     } catch (error) {
+
+        // Bắt và log lỗi khi gọi API thất bại
         console.error("Error loading data:", error);
     } finally {
+
+        // Tắt trạng thái loading sau khi xử lý xong
         isLoading.value = false;
     }
 }
 
+/**
+ * Hàm ngừng sử dụng một hoặc nhiều ca làm việc.
+ * - Nhận vào một Id hoặc danh sách Id ca làm việc
+ * - Chuẩn hóa dữ liệu đầu vào thành mảng trước khi gọi API
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleInactiveAll = async (shiftIds) => {
+    // Nếu chỉ truyền vào 1 Id thì chuyển thành mảng
     if (!Array.isArray(shiftIds)) {
         shiftIds = [shiftIds];
     }
+
+    // Gọi API ngừng sử dụng ca làm việc
     await ShiftAPI.inactiveAll(shiftIds);
 }
 
+/**
+ * Hàm kích hoạt (sử dụng) một hoặc nhiều ca làm việc.
+ * - Nhận vào một Id hoặc danh sách Id ca làm việc
+ * - Chuẩn hóa dữ liệu đầu vào thành mảng trước khi gọi API
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleActiveAll = async (shiftIds) => {
+    // Nếu chỉ truyền vào 1 Id thì chuyển thành mảng
     if (!Array.isArray(shiftIds)) {
         shiftIds = [shiftIds];
     }
+
+    // Gọi API kích hoạt ca làm việc
     await ShiftAPI.activeAll(shiftIds);
 }
 
 
+/**
+ * Theo dõi sự thay đổi của trạng thái phân trang, sắp xếp và lọc dữ liệu.
+ * - Khi pageSize, pageIndex, sortItems, customFilters hoặc filterItems thay đổi
+ *   thì tự động gọi lại API để load dữ liệu mới
+ * - deep: true     → theo dõi thay đổi sâu trong object/array
+ * - immediate: true → gọi API ngay lần đầu khi component được mount
+ *
+ * Created By: hiepnd - 12/2025
+ */
 watch(
     () => [
     pagingState.pageSize,
@@ -75,6 +144,18 @@ watch(
     {deep: true, immediate: true}
 )
 
+
+/**
+ * Cấu hình danh sách cột hiển thị cho bảng Ca làm việc (Shift).
+ * - field      : Tên field tương ứng với dữ liệu backend
+ * - label      : Tiêu đề hiển thị trên UI
+ * - type       : Kiểu dữ liệu của cột (text, number, date, select…)
+ * - filterable : Cho phép lọc dữ liệu theo cột hay không
+ * - options    : Danh sách toán tử lọc
+ * - right      : Căn phải nội dung cột (thường dùng cho số)
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const columns = [
     { 
         field: "shiftCode", 
@@ -154,26 +235,76 @@ const columns = [
     { field: "modifiedDate", label: "Ngày sửa", filterable: true, type: COLUMN_TYPE.DATE, options:  NUMBER_DATE_FILTER_OPERATORS, right: false},
 ];
 
+/**
+ * Trạng thái hiển thị form thêm/sửa ca làm việc.
+ * Created By: hiepnd - 12/2025
+ */
 const showFormModal = ref(false);
+
+/**
+ * Ca làm việc đang được chọn (dùng cho xem / sửa).
+ * Created By: hiepnd - 12/2025
+ */
 const selectedShift = ref({});
+
+/**
+ * Loại modal (Tạo mới / Chỉnh sửa).
+ * Created By: hiepnd - 12/2025
+ */
 const modalType = ref(SHIFT_MODAL_TYPE.CREATE);
 
+/**
+ * Hiển thị form modal thêm mới / chỉnh sửa ca làm việc.
+ * - type : Loại modal (CREATE | UPDATE)
+ * - data : Dữ liệu ca làm việc được truyền vào form
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleShowFormModal = (type = SHIFT_MODAL_TYPE.CREATE, data = {}) => {
     modalType.value = type;
     selectedShift.value = data;
     showFormModal.value = true;
 }
 
+/**
+ * Đóng form modal ca làm việc.
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleCloseModal = () => {
     showFormModal.value = false;
 }
 
+/**
+ * Xử lý sự kiện chỉnh sửa ca làm việc.
+ * - Mở form modal ở chế độ UPDATE
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleEdit = (row) => {
     handleShowFormModal(SHIFT_MODAL_TYPE.UPDATE, row);
 }
 
-const handleDuplicate = (row) => {
-    const duplicatedData = { ...row };
+/**
+ * Xử lý nhân bản (duplicate) ca làm việc.
+ * - Lấy dữ liệu mới nhất từ server theo Id
+ * - Xóa các trường định danh để tạo mới
+ * - Mở form modal ở chế độ CREATE với dữ liệu đã nhân bản
+ *
+ * Created By: hiepnd - 12/2025
+ */
+const handleDuplicate = async (row) => {
+    let duplicatedData = { ...row };
+
+    const response = await ShiftAPI.getById(row.shiftId);
+
+    if(response.errors && response.statusCode >= 400){
+        console.error("handleDuplicate :" , response.errors);
+        return;
+    }
+
+    duplicatedData = {...response?.data.data};
+      
     // Xóa định danh để tạo mới
     delete duplicatedData.shiftCode;
     delete duplicatedData.shiftId;
@@ -181,7 +312,15 @@ const handleDuplicate = (row) => {
     handleShowFormModal(SHIFT_MODAL_TYPE.CREATE, duplicatedData);
 }
 
+/**
+ * Cập nhật trạng thái sử dụng của một hoặc nhiều ca làm việc.
+ * - Cập nhật trước trên frontend để phản hồi nhanh UI
+ * - Sau đó gọi API để cập nhật dữ liệu backend
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleUpdateStatus = async ({ ids, status }) => {
+    // Cập nhật trạng thái tạm thời trên frontend
     pagingResult.data.forEach(item => {
         if (ids.includes(item.shiftId)) {
 
@@ -193,7 +332,8 @@ const handleUpdateStatus = async ({ ids, status }) => {
     });
 
 
-    try {                                                                                                      
+    try {                  
+        // Gọi API cập nhật trạng thái                                                                                    
         if (status === false) {                                                                                
             await handleActiveAll(ids);                                                                     
         } else {                                                                                              
@@ -204,14 +344,35 @@ const handleUpdateStatus = async ({ ids, status }) => {
     }
 }
 
+/**
+ * Trạng thái hiển thị modal xác nhận xóa ca làm việc.
+ * Created By: hiepnd - 12/2025
+ */
 const showDeleteModal = ref(false);
+
+/**
+ * Danh sách Id ca làm việc cần xóa.
+ * Created By: hiepnd - 12/2025
+ */
 const idsToDelete = ref([]);
+
+/**
+ * Nội dung thông báo hiển thị trong modal xác nhận xóa.
+ * Created By: hiepnd - 12/2025
+ */
 const deleteMessage = ref('');
 
+/**
+ * Xử lý yêu cầu xóa ca làm việc.
+ * - Nhận vào danh sách Id ca làm việc
+ * - Hiển thị thông báo xác nhận phù hợp (1 bản ghi hoặc nhiều bản ghi)
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleRequestDelete = (shiftIds) => {
     idsToDelete.value = shiftIds.shiftIds;
     if (shiftIds.shiftIds.length === 1) {
-        // Tìm tên của ca làm việc cần xóa
+        // Tìm mã ca làm việc cần xóa để hiển thị trong thông báo
         const item = pagingResult.data.find(i => i.shiftId === shiftIds.shiftIds[0]);
         const code = item ? item.shiftCode : '';
         deleteMessage.value = `Ca làm việc <b>${code}</b> sau khi bị xóa sẽ không thể khôi phục. Bạn có muốn tiếp tục xóa không?`;
@@ -221,6 +382,14 @@ const handleRequestDelete = (shiftIds) => {
     showDeleteModal.value = true;
 };
 
+/**
+ * Xác nhận xóa ca làm việc.
+ * - Gọi API xóa ca làm việc
+ * - Hiển thị thông báo thành công
+ * - Reload lại dữ liệu phân trang
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const confirmDelete = async () => {
     try {
         await ShiftAPI.deleteShifts(idsToDelete.value);
@@ -230,16 +399,28 @@ const confirmDelete = async () => {
         showDeleteModal.value = false;
         idsToDelete.value = [];
     } catch (error) {
+        //Log lỗi 
         console.error("Lỗi khi xóa:", error);
-        // Có thể thêm thông báo lỗi ở đây
     }
 };
 
+/**
+ * Hủy thao tác xóa ca làm việc.
+ * - Đóng modal xác nhận
+ * - Reset danh sách Id cần xóa
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const cancelDelete = () => {
     showDeleteModal.value = false;
     idsToDelete.value = [];
 };
-    
+
+/**
+ * Hiển thị thông báo toast thành công.
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const showSuccessToast = (message) => {
   ElMessage({
     message: message ,
@@ -250,13 +431,27 @@ const showSuccessToast = (message) => {
     offset: 32
     });
 }
+
+/**
+ * Xử lý sau khi thêm mới hoặc chỉnh sửa ca làm việc thành công.
+ * - Reload lại dữ liệu
+ * - Hiển thị thông báo phù hợp theo loại modal
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleSuccessCreate = async () => {
     await loadDataPagingShift();
-    if(modalType === SHIFT_MODAL_TYPE.CREATE){
+    if(modalType.value === SHIFT_MODAL_TYPE.CREATE){
         showSuccessToast("Thêm ca làm việc thành công");
     }else showSuccessToast("Sửa ca làm việc thành công");
 }
 
+/**
+ * Xử lý tìm kiếm ca làm việc theo từ khóa.
+ * - Tìm kiếm theo mã ca, tên ca và mô tả
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleSearch = (val) => {
     const filterCode = {
         'column' : "ShiftCode",
@@ -277,16 +472,34 @@ const handleSearch = (val) => {
     pagingState.customFilters = [filterCode,filterName,filterDescription];
 }
 
+/**
+ * Xử lý thay đổi số bản ghi trên một trang.
+ * - Reset về trang đầu tiên khi thay đổi pageSize
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleChangePageSize = (val) => {
     pagingState.pageSize = val
+
+    //Reset về trang đầu tiên khi thay đổi pageSize
     pagingState.pageIndex = 1
 }
 
+/**
+ * Xử lý thay đổi trang hiện tại.
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleChangePageIndex = (val) => {
     pagingState.pageIndex = val
 }
 
-
+/**
+ * Xử lý thay đổi bộ lọc từ bảng dữ liệu.
+ * - Chuyển field từ camelCase sang PascalCase để gửi lên backend
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleFilterChange = (filters) => {
 
     pagingState.filterItems = filters.map(filter => {
@@ -298,39 +511,71 @@ const handleFilterChange = (filters) => {
     });
 }
 
-// Xử lý khi sorts thay đổi
+/**
+ * Xử lý khi người dùng thay đổi sắp xếp (sort) trên bảng dữ liệu.
+ * - Nhận danh sách sort từ UI
+ * - Chuyển fieldName từ camelCase (frontend)
+ *   sang PascalCase để backend nhận đúng
+ * - Gán lại vào pagingState.sortItems để dùng cho paging
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleSortChange = (sorts) => {
     pagingState.sortItems = sorts.map(sort => {
         return {
+
+            // Tên field gửi lên backend (chuẩn PascalCase)
             fieldName: camelToPascalCase(sort.fieldName),
+
+            // ASC hoặc DESC
             direction: sort.direction
         }
     })
 }
 
-// Xử lý export excel
+/**
+ * Xử lý xuất danh sách ca làm việc ra file Excel.
+ * - Gửi toàn bộ trạng thái paging (filter, sort, pageSize, pageIndex)
+ *   lên backend để export đúng dữ liệu đang xem
+ * - Nhận file Excel dạng Blob từ API
+ * - Tạo link tạm thời và tự động trigger download
+ *
+ * Created By: hiepnd - 12/2025
+ */
 const handleExportExcel = async () => {
     try {
+        //Gọi API export Excel.
         const response = await ShiftAPI.exportExcel(pagingState);
 
+        //Tạo URL tạm thời từ Blob để trình duyệt có thể tải file
         const url = window.URL.createObjectURL(new Blob([response.data]));
+
+        //Tạo thẻ <a> ảo để trigger download
         const link = document.createElement('a');
         link.href = url;
 
+        //Lấy tên file từ header `content-disposition`
         const contentDisposition = response.headers['content-disposition'];
         let fileName = 'Danh_sach_ca.xlsx'; // Tên mặc định nếu không lấy được
         
         if (contentDisposition) {
+            //Regex để lấy filename trong header
             const match = contentDisposition.match(/filename="?([^"]+)"?/);
             if (match && match[1]) {
                 fileName = decodeURIComponent(match[1]); // Decode để hiển thị tiếng Việt đúng
             }
         }
+
+        //Gán tên file cho thuộc tính download
         link.setAttribute('download', fileName);
 
+        //Append link vào DOM để click được
         document.body.appendChild(link);
+
+        //Trigger download file
         link.click();
         
+        //Dọn dẹp DOM và giải phóng bộ nhớ
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
     } catch (error) {

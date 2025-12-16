@@ -75,7 +75,9 @@ const handleChange = (val) => {
                   step="00:30"
                   end="23:30"
                   :placeholder="props.placeholder"
-                  :prefix-icon="null"    
+                  :prefix-icon="null"
+                  filterable
+                  allow-create    
                   :suffix-icon="Clock"
                   @blur="handleBlur"
                   @change="handleChange"
