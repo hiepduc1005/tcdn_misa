@@ -2,17 +2,18 @@
 import { ref } from 'vue';
 import accountAvatar from '../assets/images/account-avatar.png';
 import BaseToolTip from '../components/tooltip/BaseToolTip.vue';
+import { ElMessage } from 'element-plus';
 
-const isInviteBoxOpen = ref(false);
-
-const handleOpenInviteBox = () => {
-    isInviteBoxOpen.value = true;
-}
-
-const handleCloseInviteBox = () => {
-    isInviteBoxOpen.value = false;
-}
-
+const showDevelopingFeatureToast = () => {
+  ElMessage({
+    message: 'Tính năng đang trong quá trình phát triển',
+    type: 'info',
+    customClass: 'misa-toast',
+    duration: 3000,
+    showClose: true,
+    offset: 32
+  });
+};
 </script>
 
 <template>
@@ -56,7 +57,7 @@ const handleCloseInviteBox = () => {
                             <span style="font-weight: 600;">Xuất excel</span>
                         </template>
                         <template #title>
-                            <div class="icon24 export-excel-icon pointer"></div>
+                            <div class="icon24 export-excel-icon pointer" @click="showDevelopingFeatureToast"></div>
                         </template>
                     </BaseToolTip>
 
@@ -67,18 +68,18 @@ const handleCloseInviteBox = () => {
                             <span  style="font-weight: 600;">Tra cứu tồn kho</span>
                         </template>
                         <template #title>
-                            <div class="icon24 package-icon pointer"></div>
+                            <div class="icon24 package-icon pointer" @click="showDevelopingFeatureToast"></div>
                         </template>
                     </BaseToolTip>
 
-                    <div @mouseenter="handleOpenInviteBox" @mouseleave="handleCloseInviteBox" class="invite-icon"></div>
+                    <div class="invite-icon" @click="showDevelopingFeatureToast"></div>
                     
                     <BaseToolTip>
                         <template #content>
                             <span style="font-weight: 600;">Thông báo</span>
                         </template>
                         <template #title>
-                            <div class="icon24 notify-icon pointer"></div>
+                            <div class="icon24 notify-icon pointer" @click="showDevelopingFeatureToast"></div>
                         </template>
                     </BaseToolTip>
 
@@ -87,7 +88,7 @@ const handleCloseInviteBox = () => {
                             <span style="font-weight: 600;">Trợ giúp</span>
                         </template>
                         <template #title>
-                            <div class="icon24 question-icon pointer"></div>
+                            <div class="icon24 question-icon pointer" @click="showDevelopingFeatureToast"></div>
                         </template>
                     </BaseToolTip>
 
@@ -96,7 +97,7 @@ const handleCloseInviteBox = () => {
                             <span style="font-weight: 600;">Tính năng khác</span>
                         </template>
                         <template #title>
-                            <div class="icon24 dot-circle-icon pointer"></div>
+                            <div class="icon24 dot-circle-icon pointer" @click="showDevelopingFeatureToast"></div>
                         </template>
                     </BaseToolTip>
 
@@ -105,7 +106,7 @@ const handleCloseInviteBox = () => {
                             <span style="font-weight: 600;">Kiến thức hữu ích</span>
                         </template>
                         <template #title>
-                            <div class="knowledge-icon pointer"></div>
+                            <div class="knowledge-icon pointer" @click="showDevelopingFeatureToast"></div>
                         </template>
                     </BaseToolTip>
 
@@ -113,17 +114,6 @@ const handleCloseInviteBox = () => {
                         <img :src="accountAvatar" alt="Avatar">
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="invite-box-popup" v-show="isInviteBoxOpen">
-            <div class="invite-box-header">
-                <div class="invite-box-title">Mời tham gia MISA AMIS</div>
-                <div class="invite-box-close"></div>
-            </div>
-            <div class="invite-box-content">
-                <div class="invite-box-des">Mời đồng nghiệp tham gia làm việc chung trên <strong>MISA AMIS</strong> để dễ dàng trao đổi công việc, gửi lịch họp và thông tin báo cáo.</div>
-                <div class="invite-box-open-button">Gửi lời mời</div>
             </div>
         </div>
     </header >
@@ -198,91 +188,4 @@ const handleCloseInviteBox = () => {
         object-fit: cover;
         
     }
-
-    /* Invite popup  */
-    .invite-box-popup{
-
-        width: 360px;
-        position: fixed;
-        top: 0;
-        right: 0;
-        left: auto;
-        z-index: 5000000;
-        float: left;
-        cursor: default;
-        color: #1f1f1f;
-        border-radius: 16px;
-        font-size: 14px;
-        background: center / cover no-repeat url('../assets/icons/background.svg');
-        box-shadow: 0 8px 12px rgba(0, 0, 0, .32);
-        animation-name: fadeIn;
-
-        padding: 20px;
-    }
-    .invite-box-header{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 12px;
-    }
-
-    .invite-box-header .invite-box-title{
-        font-weight: 700;
-        font-size: 17px;
-        line-height: 24px;
-        letter-spacing: 0px;
-        vertical-align: middle;
-        margin-bottom: 0;
-        padding-left: 32px;
-        background: left / 24px no-repeat url('../assets/icons/invitebox-icon.svg')
-    }
-
-    .invite-box-close{
-        position: absolute;
-        top: 18px;
-        right: 12px;
-        width: 28px;
-        height: 28px;
-        cursor: pointer;
-        background-color: transparent;
-        border: none;
-        font-size: 18px;
-        color: #666;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-image: url('../assets/icons/close-icon.svg');
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: 24px;
-    }
-
-    .invite-box-content{
-        position: relative;
-    }
-
-    .invite-box-content .invite-box-des{
-        position: relative;
-        margin-bottom: 12px;
-        line-height: 19px;
-    }
-
-    .invite-box-content .invite-box-open-button{
-        display: flex;
-        height: 32px;
-        min-width: 80px;
-        padding: 0 12px;
-        justify-content: center;
-        align-items: center;
-        align-self: stretch;
-        border-radius: 8px;
-        background: #2563eb;
-        color: #fff;
-        font-weight: 500;
-        cursor: pointer;
-        -webkit-user-select: none;
-        user-select: none;
-    }
-    
-
 </style>

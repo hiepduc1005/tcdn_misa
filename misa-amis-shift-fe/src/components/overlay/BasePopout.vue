@@ -1,5 +1,5 @@
 <script setup>
-    import { useRouter } from 'vue-router';
+    import { useRouter, useRoute } from 'vue-router';
 
     const props = defineProps({
         item: {
@@ -19,11 +19,16 @@
     })
 
     const router = useRouter();
+    const route = useRoute();
 
     const handleClick = (item) => {
         if(item.path){
             router.push(item.path);
         }
+    }
+
+    const isActive = (path) => {
+        return route.path === path;
     }
 </script>
 <template>
@@ -47,9 +52,10 @@
                             v-for="popoutBodyItem in child.items" 
                             :key="popoutBodyItem.index" 
                             class="body-item flex flex-row align-center"
+                            :class="{ 'body-item-active': isActive(popoutBodyItem.path) }"
                             @click="handleClick(popoutBodyItem)"
                         >
-                            <div class="icon icon-turndown"></div>
+                            <div class="icon icon-turndown" :class="isActive(popoutBodyItem.path) ? 'bg-white' : ''"></div>
                             <span>{{ popoutBodyItem.title }}</span>
                         </div>
                     </div>
@@ -135,5 +141,13 @@
         background-color: #fff;
     }
 
+    .body-item-active {
+        background-color: #4b5563 !important;
+        color: #fff !important;
+    }
+
+    .bg-white {
+        background-color: #fff !important;
+    }
     
 </style>

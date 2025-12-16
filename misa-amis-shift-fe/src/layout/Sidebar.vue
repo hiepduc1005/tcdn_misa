@@ -38,10 +38,12 @@
                             v-for="child in item.children" 
                             :key="child.index" 
                             class="sidebar__child-item"
+                            :class="{ 'sidebar__child-item-active': isActive(child) }"
+                            @click="handleChildClickNav(child)"
                             @mouseenter="onMouseEnterItem(child, $event)" 
                             @mouseleave="onMouseLeave"
                         >
-                            <div class="icon icon-turndown"></div>
+                            <div class="icon icon-turndown" :class="isActive(child) ? 'bg-white' : ''"></div>
                             <span>{{ child.title }}</span>
                             <div v-if="child?.type === 'popout'" class="flex flex-end align-center flex-1">
                                 <div key="pop" class="icon icon-popout"></div>
@@ -514,6 +516,15 @@ const menuData = ref([
 
     .sidebar__child-item:hover .icon-turndown{
         background-color: #fff;
+    }
+
+    .sidebar__child-item-active {
+        background-color: #4b5563 !important;
+        color: #fff !important;
+    }
+
+    .sidebar__child-item-active .icon-turndown {
+        background-color: #fff !important;
     }
 
 
